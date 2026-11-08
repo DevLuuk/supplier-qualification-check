@@ -30,9 +30,14 @@ def _doc(doc_type: str, values: dict) -> ExtractedDocument:
 
 def _clean_values(name: str = LEGAL_NAME) -> dict[str, dict]:
     return {
-        "register_extract": {"legal_name": name, "registration_number": "HRB 148263"},
+        "register_extract": {
+            "legal_name": name,
+            "registration_number": "HRB 148263",
+            "registered_address": "Kaiserdamm 41, 22301 Hamburg",
+        },
         "insurance_certificate": {
             "insured_name": name,
+            "insured_address": None,
             "insured_amount_eur": 5_000_000,
             "valid_from": "2026-01-01",
             "valid_until": "2026-12-31",
@@ -66,7 +71,7 @@ def _mueller_values() -> dict[str, dict]:
 
 def test_clean_firm_passes_everything():
     verdicts = run_rules(_firm(_clean_values()), "DE")
-    assert len(verdicts) == 18
+    assert len(verdicts) == 20
     assert {v.rule_id: v.status for v in verdicts if v.status != "pass"} == {}
 
 
@@ -75,7 +80,8 @@ def test_expired_insurance_fails_validity_only():
     values["insurance_certificate"]["valid_until"] = "2026-10-15"
     verdicts = _by_id(run_rules(_firm(values), "DE"))
     assert verdicts["DE-INS-01"].status == "fail"
-    assert [v for v in verdicts.values() if v.status != "pass"] == [verdicts["DE-INS-01"]]
+    assert verdicts["DE-INS-04"].status == "unsure"
+    assert {v.rule_id for v in verdicts.values() if v.status != "pass"} == {"DE-INS-01", "DE-INS-04"}
 
 
 def test_mueller_case():
@@ -201,3 +207,48 @@ def test_unreadable_scan_makes_missing_document_unsure_not_fail():
     assert verdicts["DE-DOC-02"].status == "unsure"
     assert "no text layer (scan)" in verdicts["DE-DOC-02"].reason
     assert verdicts["DE-INS-01"].reason == "document missing"
+
+
+@pytest.mark.parametrize(
+    ("valid_until", "status", "reason"),
+    [
+        ("2026-12-09", "pass", "Valid for 30 more days."),
+        ("2026-12-08", "unsure", "valid today, expires in 29 days"),
+        ("2026-11-14", "unsure", "valid today, expires in 5 days"),
+    ],
+)
+def test_insurance_runway(valid_until, status, reason):
+    values = _clean_values()
+    values["insurance_certificate"]["valid_until"] = valid_until
+    verdict = _by_id(run_rules(_firm(values), "DE"))["DE-INS-04"]
+    assert (verdict.status, verdict.reason) == (status, reason)
+
+
+@pytest.mark.parametrize(
+    ("insured_address", "status"),
+    [
+        (None, "pass"),
+        ("Kaiserdamm 41, 22301 Hamburg", "pass"),
+        ("kaiserdamm  41 22301 hamburg", "pass"),
+        ("Industriestraße 9, 27568 Bremerhaven", "unsure"),
+    ],
+)
+def test_insured_address(insured_address, status):
+    values = _clean_values()
+    values["insurance_certificate"]["insured_address"] = insured_address
+    verdict = _by_id(run_rules(_firm(values), "DE"))["DE-INS-05"]
+    assert verdict.status == status
+    if insured_address is None:
+        assert verdict.reason == "certificate prints no address"
+
+
+def test_street_abbreviation_matches():
+    values = _clean_values()
+    values["register_extract"]["registered_address"] = "Hafenstraße 27, 44263 Dortmund"
+    values["insurance_certificate"]["insured_address"] = "Hafenstr. 27, 44263 Dortmund"
+    assert _by_id(run_rules(_firm(values), "DE"))["DE-INS-05"].status == "pass"
+
+
+def test_sanctions_near_miss_with_firm_name_inside_is_unsure():
+    values = _clean_values("Nordhaus Bau GmbH")
+    assert _by_id(run_rules(_firm(values), "DE"))["DE-SAN-01"].status == "unsure"

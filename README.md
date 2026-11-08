@@ -18,4 +18,5 @@ uv run streamlit run src/supplier_check/app.py
 
 The command line run prints the verdicts and saves the full result to `eval/results/<firm>.json`.
 Model answers are cached in `eval/cache/`, so a second run of the same firm makes no model calls.
+Add `--thinking normal` to the command line run to let the reading model think longer; the default is minimal.
 Run `uv run pytest -q` for the rule tests, which need no key.

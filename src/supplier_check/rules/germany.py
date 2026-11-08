@@ -3,16 +3,26 @@ from functools import partial
 
 from supplier_check.lookups import (
     lookup_register,
+    normalise_address,
     name_status,
     sanctions_status,
     screen_sanctions,
 )
 from supplier_check.models import DocType, Finding, FirmFile, Rule, RuleContext, Status
-from supplier_check.rules import Unsure, document, need_date, need_int, need_text
+from supplier_check.rules import (
+    COVERED_ELSEWHERE,
+    DOCUMENT_MISSING,
+    Unsure,
+    document,
+    need_date,
+    need_int,
+    need_text,
+)
 
 # assumed minimum, see brief
 MIN_INSURED_EUR = 5_000_000
 SAFETY_YEARS = 3
+INSURANCE_RUNWAY_DAYS = 30
 YEAR_RANGE = re.compile(r"(\d{4})\D+(\d{4})")
 STATUS_ORDER: dict[Status, int] = {"pass": 0, "unsure": 1, "fail": 2}
 
@@ -161,7 +171,33 @@ def context(firm: FirmFile) -> RuleContext:
     return RuleContext(firm=firm, lookups=lookups)
 
 
+def insurance_runway(context: RuleContext) -> Finding:
+    end, field = need_date(context.firm, INSURANCE, "valid_until")
+    days_left = (end - context.firm.as_of).days
+    if days_left < 0:
+        raise Unsure(f"Already expired {-days_left} days ago; {COVERED_ELSEWHERE} (DE-INS-01).", [field.source])
+    if days_left >= INSURANCE_RUNWAY_DAYS:
+        return Finding(status="pass", reason=f"Valid for {days_left} more days.", evidence=[field.source])
+    return Finding(status="unsure", reason=f"valid today, expires in {days_left} days", evidence=[field.source])
+
+
+def insured_address_matches(context: RuleContext) -> Finding:
+    doc = document(context.firm, INSURANCE)
+    if doc is None:
+        raise Unsure(DOCUMENT_MISSING)
+    printed = doc.fields.get("insured_address")
+    if printed is None or printed.value is None:
+        return Finding(status="pass", reason="certificate prints no address")
+    insured, insured_field = need_text(context.firm, INSURANCE, "insured_address")
+    registered, registered_field = need_text(context.firm, REGISTER, "registered_address")
+    same = normalise_address(insured) == normalise_address(registered)
+    reason = f"Certificate address '{insured}', register address '{registered}'."
+    evidence = [insured_field.source, registered_field.source]
+    return Finding(status="pass" if same else "unsure", reason=reason, evidence=evidence)
+
+
 EXACT_NAME_ASK = "in your exact legal name as it appears in the commercial register"
+NOT_CONFIRMED = "We could not confirm that"
 
 RULES: list[Rule] = [
     *(
@@ -169,6 +205,7 @@ RULES: list[Rule] = [
             rule_id=rule_id,
             requirement=f"The firm sent its {label}.",
             ask=f"a copy of your {label}",
+            external=f"We did not receive a readable copy of your {label}.",
             check=partial(document_present, doc_type=doc_type, label=label),
         )
         for rule_id, doc_type, label in DOCUMENTS
@@ -176,73 +213,99 @@ RULES: list[Rule] = [
     Rule(
         rule_id="DE-REG-01",
         requirement="The register number is in the company register.",
-        ask="a current commercial register extract with your register number",
+        ask="",
+        internal_only=True,
         check=register_number_found,
     ),
     Rule(
         rule_id="DE-REG-02",
         requirement="The company register shows the same legal name.",
-        ask="a current commercial register extract showing your exact legal name",
+        ask="",
+        internal_only=True,
         check=register_name_matches,
     ),
     Rule(
         rule_id="DE-INS-01",
         requirement="The liability insurance is valid on the check date.",
         ask="a liability insurance certificate that is valid today",
+        external=f"{NOT_CONFIRMED} your liability insurance is valid today.",
         check=insurance_valid,
     ),
     Rule(
         rule_id="DE-INS-02",
         requirement=f"The insured amount is at least {MIN_INSURED_EUR:,} EUR.",
         ask=f"proof of liability cover of at least {MIN_INSURED_EUR:,} EUR",
+        external=f"{NOT_CONFIRMED} your liability cover is at least {MIN_INSURED_EUR:,} EUR.",
         check=insured_amount_enough,
     ),
     Rule(
         rule_id="DE-INS-03",
         requirement="The insurance is in the firm's legal name.",
         ask=f"an insurance certificate {EXACT_NAME_ASK}",
+        external=f"{NOT_CONFIRMED} your insurance certificate is in your exact legal name.",
         check=partial(name_matches, doc_type=INSURANCE, field_name="insured_name"),
+    ),
+    Rule(
+        rule_id="DE-INS-04",
+        requirement=f"The liability insurance is still valid in {INSURANCE_RUNWAY_DAYS} days.",
+        ask="confirmation that your liability insurance has been renewed",
+        external=f"{NOT_CONFIRMED} your liability insurance stays valid for the next {INSURANCE_RUNWAY_DAYS} days.",
+        check=insurance_runway,
+    ),
+    Rule(
+        rule_id="DE-INS-05",
+        requirement="The insured address matches the register address.",
+        ask="an insurance certificate showing your registered address, or an explanation of the other address",
+        external=f"{NOT_CONFIRMED} the address on your insurance certificate is your registered address.",
+        check=insured_address_matches,
     ),
     Rule(
         rule_id="DE-ISO-01",
         requirement="The ISO 9001 certificate is valid on the check date.",
         ask="a valid ISO 9001 certificate",
+        external=f"{NOT_CONFIRMED} your ISO 9001 certificate is valid today.",
         check=partial(certificate_valid, doc_type=ISO_9001),
     ),
     Rule(
         rule_id="DE-ISO-02",
         requirement="The ISO 45001 certificate is valid on the check date.",
         ask="a valid ISO 45001 certificate",
+        external=f"{NOT_CONFIRMED} your ISO 45001 certificate is valid today.",
         check=partial(certificate_valid, doc_type=ISO_45001),
     ),
     Rule(
         rule_id="DE-ISO-03",
         requirement="Both ISO certificates are in the firm's legal name.",
         ask=f"ISO certificates {EXACT_NAME_ASK}",
+        external=f"{NOT_CONFIRMED} your ISO certificates are in your exact legal name.",
         check=iso_holders_match,
     ),
     Rule(
         rule_id="DE-SAF-01",
         requirement="No fatal accidents in the safety record.",
-        ask="a written explanation of the fatal accidents in your safety record",
+        ask="a written explanation of any fatal accidents in your safety record",
+        external=f"{NOT_CONFIRMED} your safety record shows no fatal accidents.",
         check=no_fatalities,
     ),
     Rule(
         rule_id="DE-SAF-02",
         requirement=f"The safety record covers the last {SAFETY_YEARS} full years.",
         ask=f"a safety record covering the last {SAFETY_YEARS} full years",
+        external=f"{NOT_CONFIRMED} your safety record covers the last {SAFETY_YEARS} full years.",
         check=safety_period_covered,
     ),
     Rule(
         rule_id="DE-SAN-01",
         requirement="The firm is not on the sanctions list.",
-        ask="confirmation that your firm is not linked to any sanctioned company",
+        ask="",
+        internal_only=True,
         check=no_sanctions_match,
     ),
     Rule(
         rule_id="DE-BNK-01",
         requirement="The bank account is in the firm's legal name.",
         ask=f"a bank letter for an account {EXACT_NAME_ASK}",
+        external=f"{NOT_CONFIRMED} the bank account is in your exact legal name.",
         check=partial(name_matches, doc_type=BANK, field_name="account_holder"),
     ),
 ]

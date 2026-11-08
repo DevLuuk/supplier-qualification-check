@@ -1,4 +1,5 @@
 import re
+from datetime import date
 
 from pydantic import BaseModel
 
@@ -13,6 +14,7 @@ from supplier_check.models import (
     RegisterExtractFields,
     SafetyRecordFields,
     Source,
+    parse_date,
 )
 
 SCHEMAS: dict[DocType, type[BaseModel]] = {
@@ -42,6 +44,10 @@ Rules:
 - language: the ISO 639-1 code of the document language, for example de or en."""
 
 LANGUAGE_FIELD = "language"
+MILLION = 1_000_000
+NUMBER = re.compile(r"(\d[\d.,]*)\s*(Mio\.?|Millionen|million)?", re.IGNORECASE)
+DATE_TEXT = re.compile(r"\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{4}|\d{1,2} [A-Za-z]+ \d{4}")
+ZERO_WORDS = {"no", "none", "zero", "keine", "kein", "null"}
 IMAGE_NOTE = "\n- The document is a scan. It is attached as page images; read the values from the images."
 
 
@@ -53,17 +59,62 @@ def _clean(value: object) -> object:
     return re.sub(r"\s+", " ", value).strip() if isinstance(value, str) else value
 
 
+def _as_number(text: str) -> set[float]:
+    readings = set()
+    for candidate in (text.replace(".", "").replace(",", "."), text.replace(",", "")):
+        try:
+            readings.add(float(candidate))
+        except ValueError:
+            continue
+    return readings
+
+
+def _numbers_in(quote: str) -> set[int]:
+    found = set()
+    for match in NUMBER.finditer(quote):
+        factor = MILLION if match.group(2) else 1
+        found |= {int(n * factor) for n in _as_number(match.group(1).rstrip(".,")) if (n * factor).is_integer()}
+    words = set(re.findall(r"\w+", quote.casefold()))
+    return found | ({0} if words & ZERO_WORDS else set())
+
+
+def _dates_in(quote: str) -> set[date]:
+    return {parsed for text in DATE_TEXT.findall(quote) if (parsed := parse_date(text))}
+
+
+def _text_supported(value: str, quote: str) -> bool:
+    plain_value, plain_quote = _squash(value), _squash(quote)
+    if plain_value in plain_quote or plain_value.replace(" ", "") in plain_quote.replace(" ", ""):
+        return True
+    return set(re.findall(r"\w+", plain_value)) <= set(re.findall(r"\w+", plain_quote))
+
+
+def value_supported(value: object, quote: str) -> bool:
+    if value is None:
+        return True
+    if isinstance(value, bool) or not isinstance(value, (int, date, str)):
+        return False
+    if isinstance(value, int):
+        return value in _numbers_in(quote)
+    if isinstance(value, date):
+        return value in _dates_in(quote)
+    return _text_supported(value, quote)
+
+
 def _to_field(raw: dict, file: str, pages_text: str | None) -> Field:
     quote = raw["quote"].strip()
     if not quote:
         return Field(value=_clean(raw["value"]), source=None, confidence="low")
-    kind = "text" if pages_text is not None else "page_image"
-    quote_found = pages_text is None or _squash(quote) in pages_text
-    return Field(
+    from_image = pages_text is None
+    field = Field(
         value=_clean(raw["value"]),
-        source=Source(file=file, page=raw["page"], quote=quote, kind=kind),
-        confidence=raw["confidence"] if quote_found else "low",
+        source=Source(file=file, page=raw["page"], quote=quote, kind="page_image" if from_image else "text"),
+        confidence=raw["confidence"],
     )
+    verified = not from_image and _squash(quote) in pages_text and value_supported(field.value, quote)
+    if not verified:
+        field.confidence = "low"
+    return field
 
 
 def extract(

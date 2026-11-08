@@ -5,6 +5,7 @@ from supplier_check.lookups import (
     name_score,
     name_status,
     normalise,
+    normalise_address,
     sanctions_status,
     screen_sanctions,
 )
@@ -70,3 +71,20 @@ def test_sanctions_near_miss_passes():
 def test_sanctions_exact_fails_and_close_is_unsure():
     assert sanctions_status(screen_sanctions("Orlov Metallhandel OOO")) == "fail"
     assert sanctions_status(screen_sanctions("Kesselring Beteiligung AG")) == "unsure"
+
+
+def test_sanctions_name_inside_listed_name_is_unsure_not_fail():
+    result = screen_sanctions("Nordhaus Bau GmbH")
+    assert result.match == "Nordhaus Bau Trading FZE"
+    assert result.score == 1.0
+    assert sanctions_status(result) == "unsure"
+
+
+def test_unrelated_firms_stay_clear_of_sanctions():
+    for name in ("Weber Stahlbau GmbH", "Müller Gerüstbau GmbH", "Baltic Krane GmbH"):
+        assert sanctions_status(screen_sanctions(name)) == "pass"
+
+
+def test_address_normalisation():
+    assert normalise_address("Hafenstraße 27, 44263 Dortmund") == normalise_address("hafenstr. 27 44263  Dortmund")
+    assert normalise_address("Am Deich 3, 28199 Bremen") != normalise_address("Industriestraße 9, 27568 Bremerhaven")

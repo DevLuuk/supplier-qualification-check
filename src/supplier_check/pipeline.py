@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -7,6 +8,7 @@ from datetime import date
 from pathlib import Path
 from typing import TypeVar
 
+from google.genai import errors
 from pydantic import BaseModel, TypeAdapter
 
 from supplier_check import llm
@@ -27,7 +29,7 @@ from supplier_check.models import (
     Verdict,
 )
 from supplier_check.pdf_text import has_text, read_page_images, read_pages
-from supplier_check.rules import requests, run_lookups, run_rules
+from supplier_check.rules import rule_book, run_lookups, run_rules
 
 ROOT = Path(__file__).resolve().parents[2]
 RESULTS_DIR = ROOT / "eval" / "results"
@@ -46,10 +48,12 @@ OnStep = Callable[[StepEvent], None]
 R = TypeVar("R")
 
 
+logger = logging.getLogger(__name__)
+
+
 class _Input(BaseModel):
     path: Path
     pages: list[str]
-    images: list[bytes]
     read_from: ReadFrom
 
 
@@ -104,10 +108,18 @@ def _as_of(folder: Path) -> date:
 def _load(path: Path) -> _Input:
     pages = read_pages(path)
     if has_text(pages):
-        return _Input(path=path, pages=pages, images=[], read_from="text")
-    images = read_page_images(path) if VISION_FOR_SCANS else []
-    read_from = "page_image" if images else "unreadable"
-    return _Input(path=path, pages=pages, images=images, read_from=read_from)
+        return _Input(path=path, pages=pages, read_from="text")
+    return _Input(path=path, pages=pages, read_from="page_image" if VISION_FOR_SCANS else "unreadable")
+
+
+def _with_media(item: _Input, call: Callable[[list[bytes]], R]) -> R:
+    if item.read_from != "page_image":
+        return call([])
+    try:
+        return call([item.path.read_bytes()])
+    except errors.ClientError:
+        logger.warning("PDF input rejected for %s, sending embedded page images", item.path.name)
+        return call(read_page_images(item.path))
 
 
 def _parallel(
@@ -142,7 +154,7 @@ def _read_and_classify(folder: Path, on_step: OnStep) -> tuple[list[_Input], dic
     readable = [i for i in inputs if i.read_from != "unreadable"]
     with _Stage("classify", on_step) as stage:
         types = _parallel(
-            lambda item: classify(item.pages, item.images).doc_type,
+            lambda item: _with_media(item, lambda media: classify(item.pages, media)).doc_type,
             readable,
             stage,
             lambda item, doc_type: f"{item.path.name}: {doc_type}",
@@ -159,7 +171,9 @@ def build_firm_file(
     known = [i for i in inputs if types.get(i.path, OTHER) != OTHER]
     with _Stage("extract", on_step) as stage:
         extracted = _parallel(
-            lambda item: extract(types[item.path], item.path.name, item.pages, item.images),
+            lambda item: _with_media(
+                item, lambda media: extract(types[item.path], item.path.name, item.pages, media)
+            ),
             known,
             stage,
             _describe_document,
@@ -241,7 +255,7 @@ def check_firm(folder: Path, on_step: OnStep = _ignore) -> RunResult:
         counts = ", ".join(f"{sum(v.status == s for v in verdicts)} {s}" for s in STATUSES)
         stage.detail = f"{len(verdicts)} rules: {counts}"
     with _Stage("verdicts", on_step) as stage:
-        email = draft_email(_firm_name(firm), verdicts, requests(firm.country))
+        email = draft_email(_firm_name(firm), verdicts, rule_book(firm.country))
         stage.detail = "no email needed" if email == NOTHING_TO_ASK else "email drafted"
     calls = llm.calls[first_call:]
     return RunResult(
@@ -255,14 +269,51 @@ def check_firm(folder: Path, on_step: OnStep = _ignore) -> RunResult:
     )
 
 
+def _call_key(call: CallLog) -> tuple[str, str, str, str]:
+    return call.step, call.file, call.thinking, call.model.removesuffix(llm.CACHED_SUFFIX)
+
+
+def _with_real_calls(calls: list[CallLog], previous: list[CallLog]) -> list[CallLog]:
+    real = {_call_key(call): call for call in previous if not is_cached(call)}
+    return [real.get(_call_key(call), call) if is_cached(call) else call for call in calls]
+
+
+def _usage(calls: list[CallLog]) -> dict[str, float | int]:
+    return {
+        "tokens_in": sum(call.tokens_in for call in calls),
+        "tokens_out": sum(call.tokens_out for call in calls),
+        "cents": round(sum(map(llm.cost_cents, calls)), 4),
+    }
+
+
+def _with_call_costs(summary: RunSummary, calls: list[CallLog]) -> RunSummary:
+    rows = [
+        row.model_copy(
+            update={
+                **_usage([c for c in calls if c.file == row.file]),
+                "seconds": round(sum(c.seconds for c in calls if c.file == row.file), 2),
+            }
+        )
+        for row in summary.per_document
+    ]
+    totals = {**_usage(calls), "model_seconds": round(sum(c.seconds for c in calls), 2)}
+    return summary.model_copy(update={**totals, "cached_calls": sum(map(is_cached, calls)), "per_document": rows})
+
+
 def save(result: RunResult) -> Path:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     level = result.summary.thinking if result.summary else llm.DEFAULT_THINKING
     suffix = "" if level == llm.DEFAULT_THINKING else f".{level}"
     path = RESULTS_DIR / f"{result.firm_file.slug}{suffix}.json"
-    if path.exists() and result.calls and all(map(is_cached, result.calls)):
-        kept = CALL_LIST.validate_python(json.loads(path.read_text(encoding="utf-8"))["calls"])
-        result = result.model_copy(update={"calls": kept})
+    if path.exists() and any(map(is_cached, result.calls)):
+        stored = json.loads(path.read_text(encoding="utf-8"))
+        update = {"calls": _with_real_calls(result.calls, CALL_LIST.validate_python(stored["calls"]))}
+        if result.summary:
+            summary = _with_call_costs(result.summary, update["calls"])
+            if all(map(is_cached, result.calls)) and stored.get("summary"):
+                summary.wall_seconds = RunSummary.model_validate(stored["summary"]).wall_seconds
+            update["summary"] = summary
+        result = result.model_copy(update=update)
     path.write_text(result.model_dump_json(indent=2), encoding="utf-8")
     return path
 

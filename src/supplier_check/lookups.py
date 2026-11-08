@@ -22,6 +22,7 @@ UMLAUTS = str.maketrans({"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss"})
 LEGAL_FORMS = re.compile(r"&\s*co\.?|\b(gmbh|mbh|ag|kg|ltd|llc)\b")
 NON_WORD = re.compile(r"[^\w\s]")
 SPACES = re.compile(r"\s+")
+STREET = re.compile(r"(strasse|str\.)")
 
 
 def normalise(name: str) -> str:
@@ -30,8 +31,18 @@ def normalise(name: str) -> str:
     return SPACES.sub(" ", stripped).strip()
 
 
+def normalise_address(address: str) -> str:
+    folded = STREET.sub("str", address.casefold().translate(UMLAUTS))
+    return SPACES.sub(" ", NON_WORD.sub(" ", folded)).strip()
+
+
 def name_score(a: str, b: str) -> float:
     return fuzz.token_sort_ratio(normalise(a), normalise(b)) / PERCENT
+
+
+def sanctions_score(name: str, listed: str) -> float:
+    # subset-aware: "Nordhaus Bau" inside "Nordhaus Bau Trading FZE" scores 1.0
+    return fuzz.token_set_ratio(normalise(name), normalise(listed)) / PERCENT
 
 
 def _printed(name: str) -> str:
@@ -74,7 +85,7 @@ def lookup_register(registration_number: str) -> LookupResult:
 
 
 def screen_sanctions(name: str) -> LookupResult:
-    scored = [(name_score(name, entry["name"]), entry) for entry in _load(SANCTIONS_FILE)]
+    scored = [(sanctions_score(name, entry["name"]), entry) for entry in _load(SANCTIONS_FILE)]
     score, entry = max(scored, key=lambda pair: pair[0])
     return LookupResult(
         source="mock_sanctions",
@@ -87,7 +98,7 @@ def screen_sanctions(name: str) -> LookupResult:
 
 
 def sanctions_status(result: LookupResult) -> Status:
-    if result.score >= EXACT_SCORE:
+    if result.match and normalise(result.query) == normalise(result.match):
         return "fail"
     if result.score >= SANCTIONS_UNSURE_SCORE:
         return "unsure"

@@ -124,6 +124,8 @@ class Rule(BaseModel):
     rule_id: str
     requirement: str
     ask: str
+    external: str = ""
+    internal_only: bool = False
     check: Callable[[RuleContext], Finding]
 
 

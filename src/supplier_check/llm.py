@@ -31,11 +31,12 @@ CENTS_PER_EURO = 100
 TOKENS_PER_MILLION = 1_000_000
 
 DEFAULT_THINKING: Thinking = "minimal"
-# ThinkingLevel.MINIMAL is rejected by gemini-3.8-flash with 400 INVALID_ARGUMENT
-MINIMAL_THINKING = types.ThinkingLevel.LOW
+FAST_THINKING: Thinking = "normal"
+# gemini-3.8-flash accepts only low, medium (its default) and high; MINIMAL returns 400 INVALID_ARGUMENT
+THINKING_MINIMAL = types.ThinkingLevel.LOW
 THINKING_LEVELS: dict[Thinking, types.ThinkingLevel | None] = {
     "normal": None,
-    "minimal": MINIMAL_THINKING,
+    "minimal": THINKING_MINIMAL,
 }
 TEMPERATURE = 0.0
 TIMEOUT_MS = 120_000
@@ -43,8 +44,9 @@ SERVER_BUSY_ATTEMPTS = 3
 SERVER_BUSY_CODES = [500, 503, 504]
 CACHE_DIR = Path(__file__).resolve().parents[2] / "eval" / "cache"
 CACHED_SUFFIX = " (cached)"
-IMAGE_SIGNATURES = {b"\x89PNG": "image/png", b"\xff\xd8": "image/jpeg"}
-DEFAULT_IMAGE_MIME = "image/png"
+MEDIA_SIGNATURES = {b"%PDF": "application/pdf", b"\x89PNG": "image/png", b"\xff\xd8": "image/jpeg"}
+DEFAULT_MEDIA_MIME = "image/png"
+MEDIA_RESOLUTION = types.MediaResolution.MEDIA_RESOLUTION_MEDIUM
 
 calls: list[CallLog] = []
 thinking: Thinking = DEFAULT_THINKING
@@ -91,14 +93,14 @@ def cost_cents(call: CallLog) -> float:
 
 
 def _thinking_for(tier: Tier) -> Thinking:
-    return thinking if tier == "careful" else DEFAULT_THINKING
+    return thinking if tier == "careful" else FAST_THINKING
 
 
 def _mime(image: bytes) -> str:
-    for signature, mime in IMAGE_SIGNATURES.items():
+    for signature, mime in MEDIA_SIGNATURES.items():
         if image.startswith(signature):
             return mime
-    return DEFAULT_IMAGE_MIME
+    return DEFAULT_MEDIA_MIME
 
 
 def _contents(prompt: str, pages: list[str], images: list[bytes]) -> list:
@@ -116,7 +118,8 @@ def _fingerprint(part: str | types.Part) -> str:
 def _cache_file(model: str, level: Thinking, request: list, schema: type[BaseModel]) -> Path:
     shape = json.dumps(schema.model_json_schema(), sort_keys=True)
     texts = [_fingerprint(part) for part in request]
-    key = json.dumps([model, level, texts, shape], ensure_ascii=False)
+    media = [MEDIA_RESOLUTION.value] if len(request) > 1 else []
+    key = json.dumps([model, level, texts, shape, *media], ensure_ascii=False)
     return CACHE_DIR / f"{hashlib.sha256(key.encode()).hexdigest()}.json"
 
 
@@ -139,7 +142,8 @@ def _ask_model(model: str, level: Thinking, request: list, schema: type[T]) -> t
         temperature=TEMPERATURE,
         response_mime_type="application/json",
         response_schema=schema,
-        thinking_config=types.ThinkingConfig(thinking_level=budget) if budget else None,
+        thinking_config=types.ThinkingConfig(thinking_level=budget, include_thoughts=False) if budget else None,
+        media_resolution=MEDIA_RESOLUTION if len(request) > 1 else None,
     )
     started = time.perf_counter()
     response = _client().models.generate_content(model=model, contents=request, config=config)

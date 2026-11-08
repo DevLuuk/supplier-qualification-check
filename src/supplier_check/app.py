@@ -19,6 +19,7 @@ from supplier_check.pipeline import (
 FIRMS_DIR = ROOT / "data" / "firms"
 STATUS_COLOURS = {"pass": "#c8e6c9", "fail": "#ffcdd2", "unsure": "#fff59d"}
 RESULT_KEY = "result"
+SCAN_LABEL = "read from scan, not verified"
 SESSION_KEY = "session_runs"
 EVENTS_KEY = "events"
 GEMINI = ":blue[Gemini]"
@@ -52,7 +53,7 @@ def _firm_slugs() -> list[str]:
 
 
 def _quote(source: Source) -> str:
-    image = " (page image)" if source.kind == "page_image" else ""
+    image = f" ({SCAN_LABEL})" if source.kind == "page_image" else ""
     return f"{source.file} p{source.page}{image}: {source.quote}"
 
 
@@ -115,7 +116,11 @@ def _show_details(result: RunResult) -> None:
         st.write(f"{lookup.source}: {lookup.note}")
     st.subheader("Raw extraction")
     for doc in result.firm_file.documents:
-        with st.expander(f"{doc.file} ({doc.doc_type})"):
+        from_scan = any(f.source and f.source.kind == "page_image" for f in doc.fields.values())
+        label = f"{doc.file} ({doc.doc_type})" + (f", {SCAN_LABEL}" if from_scan else "")
+        with st.expander(label):
+            if from_scan:
+                st.warning(f"Every field in this document is {SCAN_LABEL}.")
             st.json(doc.model_dump(mode="json")["fields"])
     if result.unclassified:
         st.warning(f"Not recognised: {', '.join(result.unclassified)}")

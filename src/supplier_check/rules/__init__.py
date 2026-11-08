@@ -16,6 +16,7 @@ from supplier_check.models import (
 
 COUNTRY_MODULES = {"DE": "germany", "UK": "stub_uk"}
 DOCUMENT_MISSING = "document missing"
+COVERED_ELSEWHERE = "covered by another rule"
 
 
 class Unsure(Exception):
@@ -98,5 +99,5 @@ def run_lookups(firm_file: FirmFile, country: str) -> list[LookupResult]:
     return list(_rule_set(country).context(firm_file).lookups.values())
 
 
-def requests(country: str) -> dict[str, str]:
-    return {rule.rule_id: rule.ask for rule in _rule_set(country).RULES}
+def rule_book(country: str) -> dict[str, Rule]:
+    return {rule.rule_id: rule for rule in _rule_set(country).RULES}

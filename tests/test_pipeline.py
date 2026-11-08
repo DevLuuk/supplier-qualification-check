@@ -3,7 +3,7 @@ from datetime import date
 import pytest
 
 from supplier_check import pipeline
-from supplier_check.models import CallLog, FirmFile, RunResult
+from supplier_check.models import CallLog, FirmFile, RunResult, RunSummary
 
 REAL = CallLog(step="Extract", model="gemini-3.8-flash", tokens_in=500, tokens_out=1500, seconds=9.0)
 CACHED = CallLog(step="Extract", model="gemini-3.8-flash (cached)", tokens_in=0, tokens_out=0, seconds=0.0)
@@ -31,12 +31,34 @@ def test_cached_run_keeps_real_call_log(results_dir):
     assert _saved_calls(results_dir) == [REAL]
 
 
-def test_partly_cached_run_replaces_call_log(results_dir):
+def test_partly_cached_run_keeps_real_cost_of_cached_calls(results_dir):
+    other_file = REAL.model_copy(update={"file": "b.pdf", "tokens_in": 7})
     pipeline.save(_result([REAL]))
-    pipeline.save(_result([CACHED, REAL.model_copy(update={"tokens_in": 7})]))
-    assert [call.tokens_in for call in _saved_calls(results_dir)] == [0, 7]
+    pipeline.save(_result([CACHED, other_file]))
+    assert _saved_calls(results_dir) == [REAL, other_file]
+
+
+def test_cached_call_without_real_match_stays_cached(results_dir):
+    pipeline.save(_result([REAL]))
+    unmatched = CACHED.model_copy(update={"file": "new.pdf"})
+    pipeline.save(_result([unmatched]))
+    assert _saved_calls(results_dir) == [unmatched]
 
 
 def test_first_cached_run_is_saved_as_is(results_dir):
     pipeline.save(_result([CACHED]))
     assert _saved_calls(results_dir) == [CACHED]
+
+
+def test_partly_cached_summary_counts_real_costs(results_dir):
+    summary = RunSummary(
+        wall_seconds=1.0, model_seconds=0.0, tokens_in=0, tokens_out=0, cents=0.0, documents=0,
+        fields=0, low_confidence=0, passed=0, failed=0, unsure=0, cached_calls=2, thinking="minimal",
+        per_document=[],
+    )
+    other_file = REAL.model_copy(update={"file": "b.pdf"})
+    pipeline.save(_result([REAL]))
+    pipeline.save(_result([CACHED, other_file]).model_copy(update={"summary": summary}))
+    saved = RunResult.model_validate_json((results_dir / "test-firm.json").read_text())
+    assert saved.summary.tokens_in == 1000
+    assert saved.summary.cached_calls == 0
