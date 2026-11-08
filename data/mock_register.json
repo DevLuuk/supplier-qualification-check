@@ -18,6 +18,18 @@
     "status": "active"
   },
   {
+    "registration_number": "HRB 507731",
+    "legal_name": "Baltic Krane GmbH",
+    "register_court": "Amtsgericht Rostock",
+    "status": "active"
+  },
+  {
+    "registration_number": "HRB 118240",
+    "legal_name": "Nordhaus Bau GmbH",
+    "register_court": "Amtsgericht Bremen",
+    "status": "active"
+  },
+  {
     "registration_number": "HRB 512044",
     "legal_name": "Brandt Fliesenlegerei GmbH",
     "register_court": "Amtsgericht Köln",
@@ -45,6 +57,12 @@
     "registration_number": "HRB 120958",
     "legal_name": "Lindner Dachdeckerei GmbH",
     "register_court": "Amtsgericht Leipzig",
+    "status": "active"
+  },
+  {
+    "registration_number": "HRB 118204",
+    "legal_name": "Weserland Tiefbau GmbH",
+    "register_court": "Amtsgericht Bremen",
     "status": "active"
   }
 ]

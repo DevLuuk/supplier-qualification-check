@@ -1,0 +1,199 @@
+{
+  "slug": "baltic-krane",
+  "legal_name": "Baltic Krane GmbH",
+  "country": "DE",
+  "trade": "crane hire",
+  "as_of": "2026-11-09",
+  "planted_issues": [
+    "scanned insurance certificate: no text layer",
+    "cover letter as page one",
+    "amount written in words",
+    "two dates on certificate",
+    "english safety record"
+  ],
+  "documents": {
+    "register_extract": {
+      "file": "register_extract.pdf",
+      "language": "de",
+      "fields": {
+        "legal_name": {
+          "value": "Baltic Krane GmbH",
+          "printed": "Baltic Krane GmbH"
+        },
+        "registration_number": {
+          "value": "HRB 507731",
+          "printed": "HRB 507731"
+        },
+        "register_court": {
+          "value": "Amtsgericht Rostock",
+          "printed": "Amtsgericht Rostock"
+        },
+        "legal_form": {
+          "value": "GmbH",
+          "printed": "Gesellschaft mit beschränkter Haftung (GmbH)"
+        },
+        "registered_address": {
+          "value": "Warnowkai 18, 18057 Rostock",
+          "printed": "Warnowkai 18, 18057 Rostock"
+        },
+        "managing_director": {
+          "value": "Ines Brandenburg",
+          "printed": "Ines Brandenburg"
+        },
+        "date_of_extract": {
+          "value": "2026-10-28",
+          "printed": "28.10.2026"
+        }
+      }
+    },
+    "insurance_certificate": {
+      "file": "insurance_certificate.pdf",
+      "language": "de",
+      "text_layer": false,
+      "fields": {
+        "insurer": {
+          "value": "Ostsee Haftpflicht Versicherung VVaG",
+          "printed": "Ostsee Haftpflicht Versicherung VVaG"
+        },
+        "policy_number": {
+          "value": "OHV-BHV-7730412",
+          "printed": "OHV-BHV-7730412"
+        },
+        "insured_name": {
+          "value": "Baltic Krane GmbH",
+          "printed": "Baltic Krane GmbH"
+        },
+        "coverage_type": {
+          "value": "Betriebshaftpflichtversicherung",
+          "printed": "Betriebshaftpflichtversicherung"
+        },
+        "insured_amount_eur": {
+          "value": 5000000,
+          "printed": "EUR 5 Mio."
+        },
+        "valid_from": {
+          "value": "2026-04-01",
+          "printed": "01.04.2026"
+        },
+        "valid_until": {
+          "value": "2027-03-31",
+          "printed": "31.03.2027"
+        }
+      }
+    },
+    "iso_9001": {
+      "file": "iso_9001.pdf",
+      "language": "en",
+      "fields": {
+        "certificate_number": {
+          "value": "KZ-9001-20-04418",
+          "printed": "KZ-9001-20-04418",
+          "page": 2
+        },
+        "holder_name": {
+          "value": "Baltic Krane GmbH",
+          "printed": "Baltic Krane GmbH",
+          "page": 2
+        },
+        "standard": {
+          "value": "ISO 9001:2015",
+          "printed": "ISO 9001:2015",
+          "page": 2
+        },
+        "scope": {
+          "value": "Provision of mobile and tower cranes with operators for construction sites.",
+          "printed": "Provision of mobile and tower cranes with operators for construction sites.",
+          "page": 2
+        },
+        "issuer": {
+          "value": "Küstenzert Zertifizierungs GmbH",
+          "printed": "Küstenzert Zertifizierungs GmbH",
+          "page": 2
+        },
+        "valid_until": {
+          "value": "2028-05-20",
+          "printed": "20 May 2028",
+          "page": 2
+        }
+      }
+    },
+    "iso_45001": {
+      "file": "iso_45001.pdf",
+      "language": "en",
+      "fields": {
+        "certificate_number": {
+          "value": "KZ-45001-20-01190",
+          "printed": "KZ-45001-20-01190"
+        },
+        "holder_name": {
+          "value": "Baltic Krane GmbH",
+          "printed": "Baltic Krane GmbH"
+        },
+        "standard": {
+          "value": "ISO 45001:2018",
+          "printed": "ISO 45001:2018"
+        },
+        "scope": {
+          "value": "Safe operation and lifting work with mobile and tower cranes on construction sites.",
+          "printed": "Safe operation and lifting work with mobile and tower cranes on construction sites."
+        },
+        "issuer": {
+          "value": "Küstenzert Zertifizierungs GmbH",
+          "printed": "Küstenzert Zertifizierungs GmbH"
+        },
+        "valid_until": {
+          "value": "2029-11-02",
+          "printed": "2 November 2029"
+        }
+      }
+    },
+    "safety_record": {
+      "file": "safety_record.pdf",
+      "language": "en",
+      "fields": {
+        "firm_name": {
+          "value": "Baltic Krane GmbH",
+          "printed": "Baltic Krane GmbH"
+        },
+        "period": {
+          "value": "2023-2025",
+          "printed": "2023 to 2025"
+        },
+        "reportable_accidents": {
+          "value": 11,
+          "printed": "11"
+        },
+        "lost_time_injuries": {
+          "value": 3,
+          "printed": "3"
+        },
+        "fatalities": {
+          "value": 0,
+          "printed": "no fatalities"
+        }
+      }
+    },
+    "bank_letter": {
+      "file": "bank_letter.pdf",
+      "language": "de",
+      "fields": {
+        "bank_name": {
+          "value": "Hansebank Rostock eG",
+          "printed": "Hansebank Rostock eG"
+        },
+        "account_holder": {
+          "value": "Baltic Krane GmbH",
+          "printed": "Baltic Krane GmbH"
+        },
+        "iban": {
+          "value": "DE06130500010021784456",
+          "printed": "DE06 1305 0001 0021 7844 56"
+        },
+        "date": {
+          "value": "2026-10-29",
+          "printed": "29.10.2026"
+        }
+      }
+    }
+  }
+}

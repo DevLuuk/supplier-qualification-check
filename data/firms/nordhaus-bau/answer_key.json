@@ -1,0 +1,195 @@
+{
+  "slug": "nordhaus-bau",
+  "legal_name": "Nordhaus Bau GmbH",
+  "country": "DE",
+  "trade": "general construction",
+  "as_of": "2026-11-09",
+  "planted_issues": [
+    "registration number belongs to another firm",
+    "insurance address differs",
+    "sanctions near miss",
+    "insurance expires in 5 days"
+  ],
+  "documents": {
+    "register_extract": {
+      "file": "register_extract.pdf",
+      "language": "de",
+      "fields": {
+        "legal_name": {
+          "value": "Nordhaus Bau GmbH",
+          "printed": "Nordhaus Bau GmbH"
+        },
+        "registration_number": {
+          "value": "HRB 118204",
+          "printed": "HRB 118204"
+        },
+        "register_court": {
+          "value": "Amtsgericht Bremen",
+          "printed": "Amtsgericht Bremen"
+        },
+        "legal_form": {
+          "value": "GmbH",
+          "printed": "Gesellschaft mit beschränkter Haftung (GmbH)"
+        },
+        "registered_address": {
+          "value": "Am Deich 3, 28199 Bremen",
+          "printed": "Am Deich 3, 28199 Bremen"
+        },
+        "managing_director": {
+          "value": "Lars Nordhaus",
+          "printed": "Lars Nordhaus"
+        },
+        "date_of_extract": {
+          "value": "2026-10-21",
+          "printed": "21.10.2026"
+        }
+      }
+    },
+    "insurance_certificate": {
+      "file": "insurance_certificate.pdf",
+      "language": "de",
+      "fields": {
+        "insurer": {
+          "value": "Weserschutz Versicherung AG",
+          "printed": "Weserschutz Versicherung AG"
+        },
+        "policy_number": {
+          "value": "WS-BHV-0451882",
+          "printed": "WS-BHV-0451882"
+        },
+        "insured_name": {
+          "value": "Nordhaus Bau GmbH",
+          "printed": "Nordhaus Bau GmbH"
+        },
+        "coverage_type": {
+          "value": "Betriebshaftpflichtversicherung",
+          "printed": "Betriebshaftpflichtversicherung"
+        },
+        "insured_amount_eur": {
+          "value": 8000000,
+          "printed": "8.000.000,00 EUR"
+        },
+        "valid_from": {
+          "value": "2025-11-15",
+          "printed": "15.11.2025"
+        },
+        "valid_until": {
+          "value": "2026-11-14",
+          "printed": "14.11.2026"
+        },
+        "insured_address": {
+          "value": "Industriestraße 9, 27568 Bremerhaven",
+          "printed": "Industriestraße 9, 27568 Bremerhaven"
+        }
+      }
+    },
+    "iso_9001": {
+      "file": "iso_9001.pdf",
+      "language": "en",
+      "fields": {
+        "certificate_number": {
+          "value": "HQZ-9001-24-0771",
+          "printed": "HQZ-9001-24-0771"
+        },
+        "holder_name": {
+          "value": "Nordhaus Bau GmbH",
+          "printed": "Nordhaus Bau GmbH"
+        },
+        "standard": {
+          "value": "ISO 9001:2015",
+          "printed": "ISO 9001:2015"
+        },
+        "scope": {
+          "value": "General construction of residential and commercial buildings, including project management.",
+          "printed": "General construction of residential and commercial buildings, including project management."
+        },
+        "issuer": {
+          "value": "Hanse Qualitätszertifizierung GmbH",
+          "printed": "Hanse Qualitätszertifizierung GmbH"
+        },
+        "valid_until": {
+          "value": "2027-08-31",
+          "printed": "31 August 2027"
+        }
+      }
+    },
+    "iso_45001": {
+      "file": "iso_45001.pdf",
+      "language": "en",
+      "fields": {
+        "certificate_number": {
+          "value": "HQZ-45001-24-0212",
+          "printed": "HQZ-45001-24-0212"
+        },
+        "holder_name": {
+          "value": "Nordhaus Bau GmbH",
+          "printed": "Nordhaus Bau GmbH"
+        },
+        "standard": {
+          "value": "ISO 45001:2018",
+          "printed": "ISO 45001:2018"
+        },
+        "scope": {
+          "value": "Safe execution of general construction work on building sites.",
+          "printed": "Safe execution of general construction work on building sites."
+        },
+        "issuer": {
+          "value": "Hanse Qualitätszertifizierung GmbH",
+          "printed": "Hanse Qualitätszertifizierung GmbH"
+        },
+        "valid_until": {
+          "value": "2027-08-31",
+          "printed": "31 August 2027"
+        }
+      }
+    },
+    "safety_record": {
+      "file": "safety_record.pdf",
+      "language": "de",
+      "fields": {
+        "firm_name": {
+          "value": "Nordhaus Bau GmbH",
+          "printed": "Nordhaus Bau GmbH"
+        },
+        "period": {
+          "value": "2023-2025",
+          "printed": "2023 bis 2025"
+        },
+        "reportable_accidents": {
+          "value": 18,
+          "printed": "18"
+        },
+        "lost_time_injuries": {
+          "value": 7,
+          "printed": "7"
+        },
+        "fatalities": {
+          "value": 0,
+          "printed": "0"
+        }
+      }
+    },
+    "bank_letter": {
+      "file": "bank_letter.pdf",
+      "language": "de",
+      "fields": {
+        "bank_name": {
+          "value": "Weserbank eG",
+          "printed": "Weserbank eG"
+        },
+        "account_holder": {
+          "value": "Nordhaus Bau GmbH",
+          "printed": "Nordhaus Bau GmbH"
+        },
+        "iban": {
+          "value": "DE32290501010078123456",
+          "printed": "DE32 2905 0101 0078 1234 56"
+        },
+        "date": {
+          "value": "2026-10-28",
+          "printed": "28.10.2026"
+        }
+      }
+    }
+  }
+}

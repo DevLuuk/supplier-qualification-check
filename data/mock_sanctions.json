@@ -28,5 +28,10 @@
     "name": "Tal Engineering Partners LLC",
     "listed_since": "2025-06-11",
     "reason": "MOCK: Procurement network for listed state"
+  },
+  {
+    "name": "Nordhaus Bau Trading FZE",
+    "listed_since": "2025-09-23",
+    "reason": "MOCK: Trade in goods for listed buyers"
   }
 ]
