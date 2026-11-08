@@ -46,7 +46,8 @@ def need(firm: FirmFile, doc_type: DocType, name: str) -> Field:
     if field.source is None:
         raise Unsure(f"The {label} has no quote to prove it.")
     if field.confidence == "low":
-        raise Unsure(f"The {label} could not be read with confidence.", [field.source])
+        detail = f" ({field.note})" if field.note else ""
+        raise Unsure(f"The {label} could not be read with confidence{detail}.", [field.source])
     return field
 
 

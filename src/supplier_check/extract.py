@@ -14,6 +14,7 @@ from supplier_check.models import (
     RegisterExtractFields,
     SafetyRecordFields,
     Source,
+    Tier,
     parse_date,
 )
 
@@ -44,6 +45,9 @@ Rules:
 - language: the ISO 639-1 code of the document language, for example de or en."""
 
 LANGUAGE_FIELD = "language"
+SCAN_READS_MUST_AGREE = True
+SECOND_READ_TIER: Tier = "fast"
+MISSING_IN_BOTH = "missing in both reads"
 MILLION = 1_000_000
 NUMBER = re.compile(r"(\d[\d.,]*)\s*(Mio\.?|Millionen|million)?", re.IGNORECASE)
 DATE_TEXT = re.compile(r"\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{4}|\d{1,2} [A-Za-z]+ \d{4}")
@@ -117,11 +121,50 @@ def _to_field(raw: dict, file: str, pages_text: str | None) -> Field:
     return field
 
 
+def values_agree(a: object, b: object) -> bool:
+    if a is None or b is None or isinstance(a, bool) or isinstance(b, bool):
+        return False
+    if isinstance(a, (int, date)) or isinstance(b, (int, date)):
+        return a == b
+    return _squash(str(a)).replace(" ", "") == _squash(str(b)).replace(" ", "")
+
+
+def _merged_field(first: Field, second: Field | None) -> Field:
+    other = second.value if second else None
+    agreed = (
+        first.source is not None
+        and values_agree(first.value, other)
+        and value_supported(first.value, first.source.quote)
+    )
+    if not agreed:
+        both_missing = first.value is None and other is None
+        note = MISSING_IN_BOTH if both_missing else f"two reads differ: A={first.value} B={other}"
+        return first.model_copy(update={"confidence": "low", "note": note})
+    source = first.source.model_copy(update={"kind": "page_image_two_reads"})
+    return first.model_copy(update={"confidence": "high", "source": source, "note": ""})
+
+
+def merge_reads(read_a: ExtractedDocument, read_b: ExtractedDocument) -> ExtractedDocument:
+    fields = {name: _merged_field(field, read_b.fields.get(name)) for name, field in read_a.fields.items()}
+    return read_a.model_copy(update={"fields": fields})
+
+
+def extract_scan(doc_type: DocType, file: str, pages: list[str], images: list[bytes]) -> ExtractedDocument:
+    read_a = extract(doc_type, file, pages, images)
+    if not SCAN_READS_MUST_AGREE:
+        return read_a
+    return merge_reads(read_a, extract(doc_type, file, pages, images, SECOND_READ_TIER))
+
+
 def extract(
-    doc_type: DocType, file: str, pages: list[str], images: list[bytes] | None = None
+    doc_type: DocType,
+    file: str,
+    pages: list[str],
+    images: list[bytes] | None = None,
+    tier: Tier = "careful",
 ) -> ExtractedDocument:
     prompt = PROMPT.format(doc_type=doc_type) + (IMAGE_NOTE if images else "")
-    result = complete(prompt, SCHEMAS[doc_type], pages, "careful", images)
+    result = complete(prompt, SCHEMAS[doc_type], pages, tier, images)
     raw = result.model_dump()
     pages_text = None if images else _squash(" ".join(pages))
     fields = {

@@ -21,6 +21,9 @@ LEVEL_FILES = {"minimal": "{slug}.json", "normal": "{slug}.normal.json"}
 NO_VISION_FILE = "baltic-krane.novision.json"
 CLASSIFY_STEP = "Classification"
 SCAN_ROW = "read from scan"
+SCAN_KINDS = {"page_image", "page_image_two_reads"}
+TWO_READS_KIND = "page_image_two_reads"
+SECOND_READ_MODEL = llm.MODELS["fast"]
 EXPECTED: dict[str, dict[str, str]] = {
     "hansen-elektrotechnik": {},
     "weber-stahlbau": {"DE-INS-01": "fail"},
@@ -32,7 +35,7 @@ EXPECTED: dict[str, dict[str, str]] = {
         "DE-ISO-03": "unsure",
         "DE-BNK-01": "unsure",
     },
-    "baltic-krane": {f"DE-INS-0{n}": "unsure" for n in range(1, 5)},
+    "baltic-krane": {f"DE-INS-0{n}": "pass" for n in range(1, 5)},
     "nordhaus-bau": {"DE-REG-02": "fail", "DE-INS-04": "unsure", "DE-INS-05": "unsure", "DE-SAN-01": "unsure"},
 }
 AMOUNT = re.compile(r"^(?:EUR\s*)?(\d[\d.\s]*)(?:,\d{1,2})?\s*(?:EUR)?$", re.IGNORECASE)
@@ -119,7 +122,7 @@ def compare_firm(slug: str, result: RunResult) -> list[FieldOutcome]:
                     got=_raw(got),
                     confidence=field.confidence if field else "low",
                     quote=source.quote if source else "",
-                    from_scan=bool(source and source.kind == "page_image"),
+                    from_scan=bool(source and source.kind in SCAN_KINDS),
                     exact=_raw(got) == _raw(expected["value"]),
                     normalised=normalise_value(got) == normalise_value(expected["value"]),
                 )
@@ -231,15 +234,28 @@ def thinking_rows() -> list[list[str]]:
     return rows
 
 
+def _two_reads_lines(result: RunResult) -> list[str]:
+    scan = [o for o in compare_firm("baltic-krane", result) if o.from_scan]
+    doc = next(d for d in result.firm_file.documents if d.doc_type == "insurance_certificate")
+    agreed = [n for n, f in doc.fields.items() if f.source and f.source.kind == TWO_READS_KIND]
+    second = [c for c in result.calls if c.file == doc.file and c.model == SECOND_READ_MODEL and c.step != CLASSIFY_STEP]
+    lines = [
+        f"- Scan: two reads. Read A {llm.MODELS['careful']}, read B {SECOND_READ_MODEL}, both on the PDF bytes. "
+        f"{sum(o.normalised for o in scan)} of {len(scan)} answer-key fields match; the two reads agree on "
+        f"{len(agreed)} of {len(doc.fields)} schema fields, which become high confidence.",
+        f"  - Read B added {_usage_cells(second)[1]} tokens in, {_usage_cells(second)[2]} tokens out, "
+        f"{_usage_cells(second)[4]} euro cents.",
+    ]
+    lines += [f"  - {o.field}: expected '{o.expected}', got '{o.got}', confidence {o.confidence}" for o in scan]
+    lines += [f"  - {name}: {f.note}" for name, f in doc.fields.items() if f.note]
+    return lines
+
+
 def scan_section() -> list[str]:
     lines = []
     with_vision = load("baltic-krane")
     if with_vision:
-        scan = [o for o in compare_firm("baltic-krane", with_vision) if o.from_scan]
-        right = sum(o.normalised for o in scan)
-        lines.append(f"- Vision on (default): {right} of {len(scan)} insurance fields read from the scan match the "
-                     f"answer key; all {len(scan)} are low confidence by design, so DE-INS rules go unsure.")
-        lines += [f"  - {o.field}: expected '{o.expected}', got '{o.got}', quote '{o.quote}'" for o in scan]
+        lines += _two_reads_lines(with_vision)
     without = load("baltic-krane", NO_VISION_FILE)
     if without:
         unread = ", ".join(f"{u.file} ({u.reason})" for u in without.firm_file.unreadable) or "none"

@@ -14,7 +14,7 @@ from pydantic import BaseModel, TypeAdapter
 from supplier_check import llm
 from supplier_check.classify import classify
 from supplier_check.email_draft import NOTHING_TO_ASK, draft_email, officer_note
-from supplier_check.extract import extract
+from supplier_check.extract import extract, extract_scan
 from supplier_check.models import (
     CallLog,
     DocSummary,
@@ -172,7 +172,10 @@ def build_firm_file(
     with _Stage("extract", on_step) as stage:
         extracted = _parallel(
             lambda item: _with_media(
-                item, lambda media: extract(types[item.path], item.path.name, item.pages, media)
+                item,
+                lambda media: (extract_scan if media else extract)(
+                    types[item.path], item.path.name, item.pages, media
+                ),
             ),
             known,
             stage,
@@ -300,25 +303,40 @@ def _with_call_costs(summary: RunSummary, calls: list[CallLog]) -> RunSummary:
         for row in summary.per_document
     ]
     totals = {**_usage(calls), "model_seconds": round(sum(c.seconds for c in calls), 2)}
-    return summary.model_copy(update={**totals, "cached_calls": sum(map(is_cached, calls)), "per_document": rows})
+    return summary.model_copy(update={**totals, "per_document": rows})
+
+
+def _result_path(result: RunResult) -> Path:
+    level = result.summary.thinking if result.summary else llm.DEFAULT_THINKING
+    suffix = "" if level == llm.DEFAULT_THINKING else f".{level}"
+    return RESULTS_DIR / f"{result.firm_file.slug}{suffix}.json"
+
+
+def merge_with_saved(result: RunResult) -> RunResult:
+    path = _result_path(result)
+    if not path.exists() or not any(map(is_cached, result.calls)):
+        return result
+    stored = json.loads(path.read_text(encoding="utf-8"))
+    update = {"calls": _with_real_calls(result.calls, CALL_LIST.validate_python(stored["calls"]))}
+    if result.summary:
+        summary = _with_call_costs(result.summary, update["calls"])
+        if all(map(is_cached, result.calls)) and stored.get("summary"):
+            summary.wall_seconds = RunSummary.model_validate(stored["summary"]).wall_seconds
+        update["summary"] = summary
+    return result.model_copy(update=update)
 
 
 def save(result: RunResult) -> Path:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    level = result.summary.thinking if result.summary else llm.DEFAULT_THINKING
-    suffix = "" if level == llm.DEFAULT_THINKING else f".{level}"
-    path = RESULTS_DIR / f"{result.firm_file.slug}{suffix}.json"
-    if path.exists() and any(map(is_cached, result.calls)):
-        stored = json.loads(path.read_text(encoding="utf-8"))
-        update = {"calls": _with_real_calls(result.calls, CALL_LIST.validate_python(stored["calls"]))}
-        if result.summary:
-            summary = _with_call_costs(result.summary, update["calls"])
-            if all(map(is_cached, result.calls)) and stored.get("summary"):
-                summary.wall_seconds = RunSummary.model_validate(stored["summary"]).wall_seconds
-            update["summary"] = summary
-        result = result.model_copy(update=update)
-    path.write_text(result.model_dump_json(indent=2), encoding="utf-8")
+    path = _result_path(result)
+    path.write_text(merge_with_saved(result).model_dump_json(indent=2), encoding="utf-8")
     return path
+
+
+def cache_caption(summary: RunSummary) -> str:
+    if not summary.cached_calls:
+        return ""
+    return f"from cache; live run took {summary.wall_seconds:.1f} s and cost {summary.cents:.2f} cents"
 
 
 def usage_text(event: StepEvent) -> str:
@@ -352,6 +370,8 @@ def print_table(result: RunResult) -> None:
     rule_width, status_width = COLUMN_WIDTHS
     if result.summary:
         print("\n" + "\n".join(summary_lines(result.summary)))
+        if cache_caption(result.summary):
+            print(cache_caption(result.summary))
         for row in result.summary.per_document:
             print(f"  {row.file:<28} {row.doc_type:<22} {row.read_from:<10} p{row.pages} "
                   f"{row.fields}f {row.low_confidence}low {row.seconds:.1f}s "
@@ -367,11 +387,13 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="python -m supplier_check.pipeline")
     parser.add_argument("folder", type=Path, help="data/firms/<slug>")
     parser.add_argument("--thinking", choices=list(llm.THINKING_LEVELS), default=llm.DEFAULT_THINKING)
+    parser.add_argument("--live", action="store_true", help="ignore cached model answers for this run")
     args = parser.parse_args(argv)
     if not args.folder.is_dir():
         parser.error(f"{args.folder} is not a folder")
     llm.use_thinking(args.thinking)
-    result = check_firm(args.folder, print_event)
+    llm.use_live(args.live)
+    result = merge_with_saved(check_firm(args.folder, print_event))
     print_table(result)
     print(f"Saved {save(result)}")
 

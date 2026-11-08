@@ -185,6 +185,8 @@ def insured_address_matches(context: RuleContext) -> Finding:
     if doc is None:
         raise missing_document()
     printed = doc.fields.get("insured_address")
+    if printed is not None and printed.value is None and printed.note:
+        raise Unsure(f"The insured address is unclear ({printed.note}).")
     if printed is None or printed.value is None:
         return Finding(status="pass", reason="certificate prints no address")
     insured, insured_field = need_text(context.firm, INSURANCE, "insured_address")

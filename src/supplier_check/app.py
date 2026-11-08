@@ -7,7 +7,10 @@ import streamlit as st
 from google.genai import errors
 
 from supplier_check.models import Decision, RunResult, Source, StepEvent, StepName, Verdict
+from supplier_check import llm
 from supplier_check.pipeline import (
+    cache_caption,
+    merge_with_saved,
     RESULTS_DIR,
     ROOT,
     check_firm,
@@ -21,6 +24,8 @@ STATUS_COLOURS = {"pass": "#c8e6c9", "fail": "#ffcdd2", "unsure": "#fff59d"}
 RESULT_KEY = "result"
 INTERNAL_LABEL = "Internal, for the officer only. Not part of the email."
 SCAN_LABEL = "read from scan, not verified"
+AGREED_LABEL = "read from scan, two reads agree"
+SOURCE_LABELS = {"page_image": SCAN_LABEL, "page_image_two_reads": AGREED_LABEL}
 SESSION_KEY = "session_runs"
 EVENTS_KEY = "events"
 GEMINI = ":blue[Gemini]"
@@ -54,7 +59,7 @@ def _firm_slugs() -> list[str]:
 
 
 def _quote(source: Source) -> str:
-    image = f" ({SCAN_LABEL})" if source.kind == "page_image" else ""
+    image = f" ({SOURCE_LABELS[source.kind]})" if source.kind in SOURCE_LABELS else ""
     return f"{source.file} p{source.page}{image}: {source.quote}"
 
 
@@ -75,6 +80,8 @@ def _show_summary(result: RunResult) -> None:
     second[2].metric("Low confidence", summary.low_confidence)
     second[3].metric("Pass / fail / unsure", f"{summary.passed} / {summary.failed} / {summary.unsure}")
     second[4].metric("Cached calls", summary.cached_calls)
+    if cache_caption(summary):
+        st.caption(cache_caption(summary))
     st.dataframe(pd.DataFrame([row.model_dump() for row in summary.per_document]), hide_index=True)
 
 
@@ -117,11 +124,15 @@ def _show_details(result: RunResult) -> None:
         st.write(f"{lookup.source}: {lookup.note}")
     st.subheader("Raw extraction")
     for doc in result.firm_file.documents:
-        from_scan = any(f.source and f.source.kind == "page_image" for f in doc.fields.values())
-        label = f"{doc.file} ({doc.doc_type})" + (f", {SCAN_LABEL}" if from_scan else "")
+        scan_fields = [f for f in doc.fields.values() if f.source and f.source.kind in SOURCE_LABELS]
+        agreed = sum(f.source.kind == "page_image_two_reads" for f in scan_fields)
+        label = f"{doc.file} ({doc.doc_type})" + (", read from scan" if scan_fields else "")
         with st.expander(label):
-            if from_scan:
-                st.warning(f"Every field in this document is {SCAN_LABEL}.")
+            if scan_fields:
+                st.caption(f"Read from scan: {agreed} of {len(doc.fields)} fields have two reads that agree.")
+            for name, field in doc.fields.items():
+                if field.note:
+                    st.warning(f"{name}: {field.note}")
             st.json(doc.model_dump(mode="json")["fields"])
     if result.unclassified:
         st.warning(f"Not recognised: {', '.join(result.unclassified)}")
@@ -159,7 +170,8 @@ class StageStrip:
             st.caption(usage_text(event) if state in ("done", "failed") else " ")
 
 
-def _run(slug: str) -> None:
+def _run(slug: str, live: bool) -> None:
+    llm.use_live(live)
     strip = StageStrip()
     log = st.status("Run log", expanded=True)
     events: list[StepEvent] = []
@@ -177,8 +189,9 @@ def _run(slug: str) -> None:
         st.error(f"The model call failed: {error.message}")
         return
     log.update(label="Run log", state="complete", expanded=False)
-    save(result)
     _count_session(result)
+    result = merge_with_saved(result)
+    save(result)
     st.session_state[RESULT_KEY] = result
     st.session_state[EVENTS_KEY] = events
 
@@ -199,8 +212,10 @@ def main() -> None:
     st.badge("MOCK lookups", color="orange")
     st.caption("All firms, documents, register and sanctions data are mock.")
     slug = st.selectbox("Firm", _firm_slugs())
-    if st.button("Run"):
-        _run(slug)
+    run_column, live_column = st.columns([1, 4])
+    live = live_column.checkbox("Live run (ignore cache)")
+    if run_column.button("Run"):
+        _run(slug, live)
     elif _result_for(slug):
         _show_last_run()
     result = _result_for(slug)

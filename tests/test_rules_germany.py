@@ -274,3 +274,13 @@ def test_expiring_soon_is_not_deferred():
     values = _clean_values()
     values["insurance_certificate"]["valid_until"] = "2026-11-14"
     assert not _by_id(run_rules(_firm(values), "DE"))["DE-INS-04"].deferred
+
+
+def test_reads_disagreeing_on_address_presence_is_unsure():
+    firm = _firm(_clean_values())
+    address = firm.documents[1].fields["insured_address"]
+    address.confidence = "low"
+    address.note = "two reads differ: A=None B=Am Strande 2 | 18055 Rostock"
+    verdict = _by_id(run_rules(firm, "DE"))["DE-INS-05"]
+    assert verdict.status == "unsure"
+    assert "two reads differ" in verdict.reason

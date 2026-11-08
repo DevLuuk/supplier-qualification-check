@@ -61,4 +61,28 @@ def test_partly_cached_summary_counts_real_costs(results_dir):
     pipeline.save(_result([CACHED, other_file]).model_copy(update={"summary": summary}))
     saved = RunResult.model_validate_json((results_dir / "test-firm.json").read_text())
     assert saved.summary.tokens_in == 1000
-    assert saved.summary.cached_calls == 0
+    assert saved.summary.cached_calls == 2
+
+
+def test_merge_shows_stored_real_numbers_for_cached_run(results_dir):
+    summary = RunSummary(
+        wall_seconds=0.1, model_seconds=0.0, tokens_in=0, tokens_out=0, cents=0.0, documents=0,
+        fields=0, low_confidence=0, passed=0, failed=0, unsure=0, cached_calls=1, thinking="minimal",
+        per_document=[],
+    )
+    stored = _result([REAL]).model_copy(update={"summary": summary.model_copy(update={"wall_seconds": 6.0})})
+    pipeline.save(stored)
+    merged = pipeline.merge_with_saved(_result([CACHED]).model_copy(update={"summary": summary}))
+    assert merged.summary.wall_seconds == 6.0
+    assert merged.summary.tokens_in == 500
+    assert merged.summary.cents > 0
+    assert pipeline.cache_caption(merged.summary).startswith("from cache; live run took 6.0 s and cost")
+
+
+def test_live_run_has_no_cache_caption():
+    summary = RunSummary(
+        wall_seconds=5.0, model_seconds=20.0, tokens_in=1, tokens_out=1, cents=0.9, documents=0,
+        fields=0, low_confidence=0, passed=0, failed=0, unsure=0, cached_calls=0, thinking="minimal",
+        per_document=[],
+    )
+    assert pipeline.cache_caption(summary) == ""

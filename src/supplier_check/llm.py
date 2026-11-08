@@ -51,6 +51,7 @@ MEDIA_RESOLUTION = types.MediaResolution.MEDIA_RESOLUTION_MEDIUM
 
 calls: list[CallLog] = []
 thinking: Thinking = DEFAULT_THINKING
+live = False
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -80,6 +81,11 @@ def tagged(file: str) -> Iterator[None]:
         yield
     finally:
         _tags.file = ""
+
+
+def use_live(flag: bool) -> None:
+    global live
+    live = flag
 
 
 def use_thinking(level: Thinking) -> None:
@@ -164,7 +170,7 @@ def complete(
     model, level = MODELS[tier], _thinking_for(tier)
     request = _contents(prompt, pages, images or [])
     cache_file = _cache_file(model, level, request, schema)
-    if cache_file.exists():
+    if not live and cache_file.exists():
         calls.append(_log(schema, model + CACHED_SUFFIX, level, None, 0.0))
         return schema.model_validate_json(cache_file.read_text(encoding="utf-8"))
     text, log = _ask_model(model, level, request, schema)

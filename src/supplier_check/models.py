@@ -34,13 +34,14 @@ class Source(BaseModel):
     file: str
     page: int
     quote: str
-    kind: Literal["text", "page_image"] = "text"
+    kind: Literal["text", "page_image", "page_image_two_reads"] = "text"
 
 
 class Field(BaseModel):
     value: str | int | date | None
     source: Source | None
     confidence: Confidence
+    note: str = ""
 
     @field_validator("value", mode="before")
     @classmethod
