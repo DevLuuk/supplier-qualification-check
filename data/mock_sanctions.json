@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Hansen Elektro Trading Ltd",
+    "listed_since": "2024-03-18",
+    "reason": "MOCK: Export control breach"
+  },
+  {
+    "name": "Baltmark Industrial Supply FZE",
+    "listed_since": "2023-11-02",
+    "reason": "MOCK: Dual-use goods diversion"
+  },
+  {
+    "name": "Kesselring Beteiligungs AG",
+    "listed_since": "2025-01-27",
+    "reason": "MOCK: Ownership by listed persons"
+  },
+  {
+    "name": "Orlov Metallhandel OOO",
+    "listed_since": "2022-09-14",
+    "reason": "MOCK: Supply to listed entities"
+  },
+  {
+    "name": "Sundgau Marine Services SA",
+    "listed_since": "2024-08-05",
+    "reason": "MOCK: Sanctions evasion by shipping"
+  },
+  {
+    "name": "Tal Engineering Partners LLC",
+    "listed_since": "2025-06-11",
+    "reason": "MOCK: Procurement network for listed state"
+  }
+]

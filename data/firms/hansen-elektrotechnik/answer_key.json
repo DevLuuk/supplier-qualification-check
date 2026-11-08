@@ -1,0 +1,188 @@
+{
+  "slug": "hansen-elektrotechnik",
+  "legal_name": "Hansen Elektrotechnik GmbH",
+  "country": "DE",
+  "trade": "electrical installation",
+  "as_of": "2026-11-09",
+  "planted_issues": [
+    "none"
+  ],
+  "documents": {
+    "register_extract": {
+      "file": "register_extract.pdf",
+      "language": "de",
+      "fields": {
+        "legal_name": {
+          "value": "Hansen Elektrotechnik GmbH",
+          "printed": "Hansen Elektrotechnik GmbH"
+        },
+        "registration_number": {
+          "value": "HRB 148263",
+          "printed": "HRB 148263"
+        },
+        "register_court": {
+          "value": "Amtsgericht Hamburg",
+          "printed": "Amtsgericht Hamburg"
+        },
+        "legal_form": {
+          "value": "GmbH",
+          "printed": "Gesellschaft mit beschränkter Haftung (GmbH)"
+        },
+        "registered_address": {
+          "value": "Kaiserdamm 41, 22301 Hamburg",
+          "printed": "Kaiserdamm 41, 22301 Hamburg"
+        },
+        "managing_director": {
+          "value": "Jan Hansen",
+          "printed": "Jan Hansen"
+        },
+        "date_of_extract": {
+          "value": "2026-10-19",
+          "printed": "19.10.2026"
+        }
+      }
+    },
+    "insurance_certificate": {
+      "file": "insurance_certificate.pdf",
+      "language": "de",
+      "fields": {
+        "insurer": {
+          "value": "Nordlicht Versicherung AG",
+          "printed": "Nordlicht Versicherung AG"
+        },
+        "policy_number": {
+          "value": "NL-BHV-5521907",
+          "printed": "NL-BHV-5521907"
+        },
+        "insured_name": {
+          "value": "Hansen Elektrotechnik GmbH",
+          "printed": "Hansen Elektrotechnik GmbH"
+        },
+        "coverage_type": {
+          "value": "Betriebshaftpflichtversicherung",
+          "printed": "Betriebshaftpflichtversicherung"
+        },
+        "insured_amount_eur": {
+          "value": 5000000,
+          "printed": "5.000.000,00 EUR"
+        },
+        "valid_from": {
+          "value": "2026-01-01",
+          "printed": "01.01.2026"
+        },
+        "valid_until": {
+          "value": "2026-12-31",
+          "printed": "31.12.2026"
+        }
+      }
+    },
+    "iso_9001": {
+      "file": "iso_9001.pdf",
+      "language": "en",
+      "fields": {
+        "certificate_number": {
+          "value": "NZ-Q-2024-08812",
+          "printed": "NZ-Q-2024-08812"
+        },
+        "holder_name": {
+          "value": "Hansen Elektrotechnik GmbH",
+          "printed": "Hansen Elektrotechnik GmbH"
+        },
+        "standard": {
+          "value": "ISO 9001:2015",
+          "printed": "ISO 9001:2015"
+        },
+        "scope": {
+          "value": "Planning, installation and maintenance of electrical systems in commercial buildings.",
+          "printed": "Planning, installation and maintenance of electrical systems in commercial buildings."
+        },
+        "issuer": {
+          "value": "Nordzert GmbH",
+          "printed": "Nordzert GmbH"
+        },
+        "valid_until": {
+          "value": "2027-06-30",
+          "printed": "30 June 2027"
+        }
+      }
+    },
+    "iso_45001": {
+      "file": "iso_45001.pdf",
+      "language": "en",
+      "fields": {
+        "certificate_number": {
+          "value": "NZ-S-2024-03377",
+          "printed": "NZ-S-2024-03377"
+        },
+        "holder_name": {
+          "value": "Hansen Elektrotechnik GmbH",
+          "printed": "Hansen Elektrotechnik GmbH"
+        },
+        "standard": {
+          "value": "ISO 45001:2018",
+          "printed": "ISO 45001:2018"
+        },
+        "scope": {
+          "value": "Occupational health and safety in electrical installation work on construction sites.",
+          "printed": "Occupational health and safety in electrical installation work on construction sites."
+        },
+        "issuer": {
+          "value": "Nordzert GmbH",
+          "printed": "Nordzert GmbH"
+        },
+        "valid_until": {
+          "value": "2027-06-30",
+          "printed": "30 June 2027"
+        }
+      }
+    },
+    "safety_record": {
+      "file": "safety_record.pdf",
+      "language": "de",
+      "fields": {
+        "firm_name": {
+          "value": "Hansen Elektrotechnik GmbH",
+          "printed": "Hansen Elektrotechnik GmbH"
+        },
+        "period": {
+          "value": "2023-2025",
+          "printed": "2023 bis 2025"
+        },
+        "reportable_accidents": {
+          "value": 7,
+          "printed": "7"
+        },
+        "lost_time_injuries": {
+          "value": 2,
+          "printed": "2"
+        },
+        "fatalities": {
+          "value": 0,
+          "printed": "0"
+        }
+      }
+    },
+    "bank_letter": {
+      "file": "bank_letter.pdf",
+      "language": "de",
+      "fields": {
+        "bank_name": {
+          "value": "Alsterbank eG",
+          "printed": "Alsterbank eG"
+        },
+        "account_holder": {
+          "value": "Hansen Elektrotechnik GmbH",
+          "printed": "Hansen Elektrotechnik GmbH"
+        },
+        "iban": {
+          "value": "DE34200505501234567890",
+          "printed": "DE34 2005 0550 1234 5678 90"
+        },
+        "date": {
+          "value": "2026-10-27",
+          "printed": "27.10.2026"
+        }
+      }
+    }
+  }
+}

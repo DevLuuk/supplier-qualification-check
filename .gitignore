@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.claude/
+.DS_Store
+eval/results/*.json
+
+# private working notes, not part of the submission
+worklogs/
+plan.md
+AI Engineer Case.pdf

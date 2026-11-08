@@ -1,0 +1,9 @@
+[project]
+name = "supplier-check"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "pypdf>=7.0.0",
+    "reportlab>=5.1.0",
+]

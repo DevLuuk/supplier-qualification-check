@@ -1,0 +1,188 @@
+{
+  "slug": "weber-stahlbau",
+  "legal_name": "Weber Stahlbau GmbH",
+  "country": "DE",
+  "trade": "structural steel",
+  "as_of": "2026-11-09",
+  "planted_issues": [
+    "insurance certificate expired"
+  ],
+  "documents": {
+    "register_extract": {
+      "file": "register_extract.pdf",
+      "language": "de",
+      "fields": {
+        "legal_name": {
+          "value": "Weber Stahlbau GmbH",
+          "printed": "Weber Stahlbau GmbH"
+        },
+        "registration_number": {
+          "value": "HRB 774102",
+          "printed": "HRB 774102"
+        },
+        "register_court": {
+          "value": "Amtsgericht Stuttgart",
+          "printed": "Amtsgericht Stuttgart"
+        },
+        "legal_form": {
+          "value": "GmbH",
+          "printed": "Gesellschaft mit beschränkter Haftung (GmbH)"
+        },
+        "registered_address": {
+          "value": "Zeppelinstraße 112, 70193 Stuttgart",
+          "printed": "Zeppelinstraße 112, 70193 Stuttgart"
+        },
+        "managing_director": {
+          "value": "Katrin Weber",
+          "printed": "Katrin Weber"
+        },
+        "date_of_extract": {
+          "value": "2026-10-12",
+          "printed": "12.10.2026"
+        }
+      }
+    },
+    "insurance_certificate": {
+      "file": "insurance_certificate.pdf",
+      "language": "de",
+      "fields": {
+        "insurer": {
+          "value": "Schwabenwacht Versicherungs-AG",
+          "printed": "Schwabenwacht Versicherungs-AG"
+        },
+        "policy_number": {
+          "value": "SW/HP/0098-4471",
+          "printed": "SW/HP/0098-4471"
+        },
+        "insured_name": {
+          "value": "Weber Stahlbau GmbH",
+          "printed": "Weber Stahlbau GmbH"
+        },
+        "coverage_type": {
+          "value": "Betriebshaftpflichtversicherung",
+          "printed": "Betriebshaftpflichtversicherung"
+        },
+        "insured_amount_eur": {
+          "value": 10000000,
+          "printed": "10.000.000,00 EUR"
+        },
+        "valid_from": {
+          "value": "2025-10-16",
+          "printed": "16.10.2025"
+        },
+        "valid_until": {
+          "value": "2026-10-15",
+          "printed": "15.10.2026"
+        }
+      }
+    },
+    "iso_9001": {
+      "file": "iso_9001.pdf",
+      "language": "en",
+      "fields": {
+        "certificate_number": {
+          "value": "SZQ 9001/26-1450",
+          "printed": "SZQ 9001/26-1450"
+        },
+        "holder_name": {
+          "value": "Weber Stahlbau GmbH",
+          "printed": "Weber Stahlbau GmbH"
+        },
+        "standard": {
+          "value": "ISO 9001:2015",
+          "printed": "ISO 9001:2015"
+        },
+        "scope": {
+          "value": "Design, fabrication and erection of structural steel for buildings and bridges.",
+          "printed": "Design, fabrication and erection of structural steel for buildings and bridges."
+        },
+        "issuer": {
+          "value": "Süddeutsche Zertifizierung SZQ GmbH",
+          "printed": "Süddeutsche Zertifizierung SZQ GmbH"
+        },
+        "valid_until": {
+          "value": "2028-03-14",
+          "printed": "14 March 2028"
+        }
+      }
+    },
+    "iso_45001": {
+      "file": "iso_45001.pdf",
+      "language": "en",
+      "fields": {
+        "certificate_number": {
+          "value": "SZQ 45001/26-0317",
+          "printed": "SZQ 45001/26-0317"
+        },
+        "holder_name": {
+          "value": "Weber Stahlbau GmbH",
+          "printed": "Weber Stahlbau GmbH"
+        },
+        "standard": {
+          "value": "ISO 45001:2018",
+          "printed": "ISO 45001:2018"
+        },
+        "scope": {
+          "value": "Safe fabrication and erection of structural steel, including work at height.",
+          "printed": "Safe fabrication and erection of structural steel, including work at height."
+        },
+        "issuer": {
+          "value": "Süddeutsche Zertifizierung SZQ GmbH",
+          "printed": "Süddeutsche Zertifizierung SZQ GmbH"
+        },
+        "valid_until": {
+          "value": "2028-03-14",
+          "printed": "14 March 2028"
+        }
+      }
+    },
+    "safety_record": {
+      "file": "safety_record.pdf",
+      "language": "de",
+      "fields": {
+        "firm_name": {
+          "value": "Weber Stahlbau GmbH",
+          "printed": "Weber Stahlbau GmbH"
+        },
+        "period": {
+          "value": "2023-2025",
+          "printed": "2023 bis 2025"
+        },
+        "reportable_accidents": {
+          "value": 15,
+          "printed": "15"
+        },
+        "lost_time_injuries": {
+          "value": 5,
+          "printed": "5"
+        },
+        "fatalities": {
+          "value": 0,
+          "printed": "0"
+        }
+      }
+    },
+    "bank_letter": {
+      "file": "bank_letter.pdf",
+      "language": "de",
+      "fields": {
+        "bank_name": {
+          "value": "Neckarwerk Bank eG",
+          "printed": "Neckarwerk Bank eG"
+        },
+        "account_holder": {
+          "value": "Weber Stahlbau GmbH",
+          "printed": "Weber Stahlbau GmbH"
+        },
+        "iban": {
+          "value": "DE31600903000045128873",
+          "printed": "DE31 6009 0300 0045 1288 73"
+        },
+        "date": {
+          "value": "2026-10-22",
+          "printed": "22.10.2026"
+        }
+      }
+    }
+  }
+}

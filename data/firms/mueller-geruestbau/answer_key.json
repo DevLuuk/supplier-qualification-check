@@ -1,0 +1,160 @@
+{
+  "slug": "mueller-geruestbau",
+  "legal_name": "Müller Gerüstbau GmbH",
+  "country": "DE",
+  "trade": "scaffolding",
+  "as_of": "2026-11-09",
+  "planted_issues": [
+    "name mismatch",
+    "missing document: iso_45001",
+    "insured amount below 5,000,000 EUR minimum"
+  ],
+  "documents": {
+    "register_extract": {
+      "file": "register_extract.pdf",
+      "language": "de",
+      "fields": {
+        "legal_name": {
+          "value": "Müller Gerüstbau GmbH",
+          "printed": "Müller Gerüstbau GmbH"
+        },
+        "registration_number": {
+          "value": "HRB 209317",
+          "printed": "HRB 209317"
+        },
+        "register_court": {
+          "value": "Amtsgericht Dortmund",
+          "printed": "Amtsgericht Dortmund"
+        },
+        "legal_form": {
+          "value": "GmbH",
+          "printed": "Gesellschaft mit beschränkter Haftung (GmbH)"
+        },
+        "registered_address": {
+          "value": "Hafenstraße 27, 44263 Dortmund",
+          "printed": "Hafenstraße 27, 44263 Dortmund"
+        },
+        "managing_director": {
+          "value": "Stefan Müller",
+          "printed": "Stefan Müller"
+        },
+        "date_of_extract": {
+          "value": "2026-10-26",
+          "printed": "26.10.2026"
+        }
+      }
+    },
+    "insurance_certificate": {
+      "file": "insurance_certificate.pdf",
+      "language": "de",
+      "fields": {
+        "insurer": {
+          "value": "Ruhrland Assekuranz AG",
+          "printed": "Ruhrland Assekuranz AG"
+        },
+        "policy_number": {
+          "value": "RA-2026-HV-300518",
+          "printed": "RA-2026-HV-300518"
+        },
+        "insured_name": {
+          "value": "Mueller Geruestbau GmbH",
+          "printed": "Mueller Geruestbau GmbH"
+        },
+        "coverage_type": {
+          "value": "Betriebshaftpflichtversicherung",
+          "printed": "Betriebshaftpflichtversicherung"
+        },
+        "insured_amount_eur": {
+          "value": 3000000,
+          "printed": "3.000.000,00 EUR"
+        },
+        "valid_from": {
+          "value": "2026-03-01",
+          "printed": "01.03.2026"
+        },
+        "valid_until": {
+          "value": "2027-02-28",
+          "printed": "28.02.2027"
+        }
+      }
+    },
+    "iso_9001": {
+      "file": "iso_9001.pdf",
+      "language": "en",
+      "fields": {
+        "certificate_number": {
+          "value": "WC-QMS-0067421",
+          "printed": "WC-QMS-0067421"
+        },
+        "holder_name": {
+          "value": "Müller Gerüstbau GmbH & Co. KG",
+          "printed": "Müller Gerüstbau GmbH & Co. KG"
+        },
+        "standard": {
+          "value": "ISO 9001:2015",
+          "printed": "ISO 9001:2015"
+        },
+        "scope": {
+          "value": "Erection and dismantling of facade, working and protective scaffolding.",
+          "printed": "Erection and dismantling of facade, working and protective scaffolding."
+        },
+        "issuer": {
+          "value": "WestCert Prüf- und Zertifizierungsgesellschaft mbH",
+          "printed": "WestCert Prüf- und Zertifizierungsgesellschaft mbH"
+        },
+        "valid_until": {
+          "value": "2027-09-01",
+          "printed": "1 September 2027"
+        }
+      }
+    },
+    "safety_record": {
+      "file": "safety_record.pdf",
+      "language": "de",
+      "fields": {
+        "firm_name": {
+          "value": "Müller Gerüstbau GmbH",
+          "printed": "Müller Gerüstbau GmbH"
+        },
+        "period": {
+          "value": "2023-2025",
+          "printed": "2023 bis 2025"
+        },
+        "reportable_accidents": {
+          "value": 24,
+          "printed": "24"
+        },
+        "lost_time_injuries": {
+          "value": 7,
+          "printed": "7"
+        },
+        "fatalities": {
+          "value": 0,
+          "printed": "0"
+        }
+      }
+    },
+    "bank_letter": {
+      "file": "bank_letter.pdf",
+      "language": "de",
+      "fields": {
+        "bank_name": {
+          "value": "Emscher Bank AG",
+          "printed": "Emscher Bank AG"
+        },
+        "account_holder": {
+          "value": "Mueller Geruestbau GmbH",
+          "printed": "Mueller Geruestbau GmbH"
+        },
+        "iban": {
+          "value": "DE98440501990003917744",
+          "printed": "DE98 4405 0199 0003 9177 44"
+        },
+        "date": {
+          "value": "2026-10-30",
+          "printed": "30.10.2026"
+        }
+      }
+    }
+  }
+}

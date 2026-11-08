@@ -1,0 +1,50 @@
+[
+  {
+    "registration_number": "HRB 148263",
+    "legal_name": "Hansen Elektrotechnik GmbH",
+    "register_court": "Amtsgericht Hamburg",
+    "status": "active"
+  },
+  {
+    "registration_number": "HRB 774102",
+    "legal_name": "Weber Stahlbau GmbH",
+    "register_court": "Amtsgericht Stuttgart",
+    "status": "active"
+  },
+  {
+    "registration_number": "HRB 209317",
+    "legal_name": "Müller Gerüstbau GmbH",
+    "register_court": "Amtsgericht Dortmund",
+    "status": "active"
+  },
+  {
+    "registration_number": "HRB 512044",
+    "legal_name": "Brandt Fliesenlegerei GmbH",
+    "register_court": "Amtsgericht Köln",
+    "status": "active"
+  },
+  {
+    "registration_number": "HRB 338871",
+    "legal_name": "Schneider Bautechnik GmbH",
+    "register_court": "Amtsgericht Frankfurt am Main",
+    "status": "active"
+  },
+  {
+    "registration_number": "HRB 906215",
+    "legal_name": "Koch Tiefbau GmbH",
+    "register_court": "Amtsgericht München",
+    "status": "active"
+  },
+  {
+    "registration_number": "HRB 774210",
+    "legal_name": "Weber Stahlbau Handels GmbH",
+    "register_court": "Amtsgericht Stuttgart",
+    "status": "active"
+  },
+  {
+    "registration_number": "HRB 120958",
+    "legal_name": "Lindner Dachdeckerei GmbH",
+    "register_court": "Amtsgericht Leipzig",
+    "status": "active"
+  }
+]
