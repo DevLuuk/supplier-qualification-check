@@ -5,6 +5,8 @@ __pycache__/
 .claude/
 .DS_Store
 eval/results/*.json
+eval/cache/
+.playwright-mcp/
 
 # private working notes, not part of the submission
 worklogs/

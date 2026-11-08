@@ -1,9 +1,22 @@
 [project]
 name = "supplier-check"
 version = "0.1.0"
-description = "Add your description here"
+description = "Checks a subcontractor's onboarding documents against rules and drafts a reply for the officer."
 requires-python = ">=3.13"
 dependencies = [
+    "google-genai>=3.0.0",
+    "pydantic>=2.14.3",
     "pypdf>=7.0.0",
+    "pytest>=9.2.0",
+    "python-dotenv>=1.2.4",
+    "rapidfuzz>=3.14.6",
     "reportlab>=5.1.0",
+    "streamlit>=1.67.0",
 ]
+
+[build-system]
+requires = ["uv_build>=0.9,<1"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
