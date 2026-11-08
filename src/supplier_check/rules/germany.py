@@ -10,9 +10,8 @@ from supplier_check.lookups import (
 )
 from supplier_check.models import DocType, Finding, FirmFile, Rule, RuleContext, Status
 from supplier_check.rules import (
-    COVERED_ELSEWHERE,
-    DOCUMENT_MISSING,
     Unsure,
+    missing_document,
     document,
     need_date,
     need_int,
@@ -175,7 +174,7 @@ def insurance_runway(context: RuleContext) -> Finding:
     end, field = need_date(context.firm, INSURANCE, "valid_until")
     days_left = (end - context.firm.as_of).days
     if days_left < 0:
-        raise Unsure(f"Already expired {-days_left} days ago; {COVERED_ELSEWHERE} (DE-INS-01).", [field.source])
+        raise Unsure(f"Already expired {-days_left} days ago, see DE-INS-01.", [field.source], deferred=True)
     if days_left >= INSURANCE_RUNWAY_DAYS:
         return Finding(status="pass", reason=f"Valid for {days_left} more days.", evidence=[field.source])
     return Finding(status="unsure", reason=f"valid today, expires in {days_left} days", evidence=[field.source])
@@ -184,7 +183,7 @@ def insurance_runway(context: RuleContext) -> Finding:
 def insured_address_matches(context: RuleContext) -> Finding:
     doc = document(context.firm, INSURANCE)
     if doc is None:
-        raise Unsure(DOCUMENT_MISSING)
+        raise missing_document()
     printed = doc.fields.get("insured_address")
     if printed is None or printed.value is None:
         return Finding(status="pass", reason="certificate prints no address")

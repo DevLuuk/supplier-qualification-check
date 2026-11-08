@@ -13,7 +13,7 @@ from pydantic import BaseModel, TypeAdapter
 
 from supplier_check import llm
 from supplier_check.classify import classify
-from supplier_check.email_draft import NOTHING_TO_ASK, draft_email
+from supplier_check.email_draft import NOTHING_TO_ASK, draft_email, officer_note
 from supplier_check.extract import extract
 from supplier_check.models import (
     CallLog,
@@ -255,7 +255,9 @@ def check_firm(folder: Path, on_step: OnStep = _ignore) -> RunResult:
         counts = ", ".join(f"{sum(v.status == s for v in verdicts)} {s}" for s in STATUSES)
         stage.detail = f"{len(verdicts)} rules: {counts}"
     with _Stage("verdicts", on_step) as stage:
-        email = draft_email(_firm_name(firm), verdicts, rule_book(firm.country))
+        rules = rule_book(firm.country)
+        email = draft_email(_firm_name(firm), verdicts, rules)
+        note = officer_note(verdicts, rules)
         stage.detail = "no email needed" if email == NOTHING_TO_ASK else "email drafted"
     calls = llm.calls[first_call:]
     return RunResult(
@@ -265,6 +267,7 @@ def check_firm(folder: Path, on_step: OnStep = _ignore) -> RunResult:
         calls=calls,
         unclassified=unclassified,
         email=email,
+        officer_note=note,
         summary=_summary(firm, verdicts, calls, inputs, time.perf_counter() - started),
     )
 

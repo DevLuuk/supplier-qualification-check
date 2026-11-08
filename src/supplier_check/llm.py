@@ -19,8 +19,9 @@ MODELS: dict[Tier, str] = {
     "fast": "gemini-3.5-flash-lite",
     "careful": "gemini-3.8-flash",
 }
-# USD per million tokens, paid tier, from https://aistudio.google.com/docs/pricing on 2026-11-08
-# (gemini-3.8-flash price valid until 2026-12-31, doubles from 2027-01-01)
+PRICE_SOURCE = "https://aistudio.google.com/docs/pricing"
+PRICE_CHECKED = "2026-11-08"
+# USD per million tokens, paid tier (gemini-3.8-flash price valid until 2026-12-31, doubles from 2027-01-01)
 PRICE_USD_PER_MILLION: dict[str, tuple[float, float]] = {
     "gemini-3.5-flash-lite": (0.30, 2.50),
     "gemini-3.8-flash": (0.75, 3.75),

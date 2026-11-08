@@ -19,6 +19,7 @@ from supplier_check.pipeline import (
 FIRMS_DIR = ROOT / "data" / "firms"
 STATUS_COLOURS = {"pass": "#c8e6c9", "fail": "#ffcdd2", "unsure": "#fff59d"}
 RESULT_KEY = "result"
+INTERNAL_LABEL = "Internal, for the officer only. Not part of the email."
 SCAN_LABEL = "read from scan, not verified"
 SESSION_KEY = "session_runs"
 EVENTS_KEY = "events"
@@ -208,6 +209,10 @@ def main() -> None:
         _show_verdicts(result)
         st.subheader("Draft email to the firm")
         st.text_area("Email", result.email, height=300)
+        if result.officer_note:
+            with st.container(border=True):
+                st.markdown(f"**{INTERNAL_LABEL}**")
+                st.warning(result.officer_note)
         _show_decision(slug)
         _show_details(result)
     _show_session_total()

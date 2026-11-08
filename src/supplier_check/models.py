@@ -76,6 +76,7 @@ class Verdict(BaseModel):
     status: Status
     reason: str
     evidence: list[Source]
+    deferred: bool = False
 
 
 class LookupResult(BaseModel):
@@ -113,6 +114,7 @@ class Finding(BaseModel):
     status: Status
     reason: str
     evidence: list[Source] = []
+    deferred: bool = False
 
 
 class RuleContext(BaseModel):
@@ -166,6 +168,7 @@ class RunResult(BaseModel):
     calls: list[CallLog]
     unclassified: list[str]
     email: str
+    officer_note: str = ""
     summary: RunSummary | None = None
 
 

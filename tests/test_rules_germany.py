@@ -252,3 +252,25 @@ def test_street_abbreviation_matches():
 def test_sanctions_near_miss_with_firm_name_inside_is_unsure():
     values = _clean_values("Nordhaus Bau GmbH")
     assert _by_id(run_rules(_firm(values), "DE"))["DE-SAN-01"].status == "unsure"
+
+
+def test_expired_insurance_runway_is_deferred_by_flag():
+    values = _clean_values()
+    values["insurance_certificate"]["valid_until"] = "2026-10-15"
+    verdicts = _by_id(run_rules(_firm(values), "DE"))
+    assert verdicts["DE-INS-04"].deferred
+    assert not verdicts["DE-INS-01"].deferred
+
+
+def test_missing_document_dependents_are_deferred_by_flag():
+    values = _clean_values()
+    del values["iso_45001"]
+    verdicts = _by_id(run_rules(_firm(values), "DE"))
+    assert verdicts["DE-ISO-02"].deferred
+    assert not verdicts["DE-DOC-04"].deferred
+
+
+def test_expiring_soon_is_not_deferred():
+    values = _clean_values()
+    values["insurance_certificate"]["valid_until"] = "2026-11-14"
+    assert not _by_id(run_rules(_firm(values), "DE"))["DE-INS-04"].deferred
