@@ -2,7 +2,7 @@
 
 All numbers are measured on 2026-11-08 from the saved runs in `eval/results/`, compared with `data/firms/<slug>/answer_key.json`. All firms and documents are mock.
 Prices from https://aistudio.google.com/docs/pricing, checked 2026-11-08: gemini-3.5-flash-lite: 0.3 USD in, 2.5 USD out per million tokens; gemini-3.8-flash: 0.75 USD in, 3.75 USD out per million tokens.
-Euro cents use an assumed exchange rate of 0.92 EUR per USD (not verified).
+Cost is in rappen (Swiss cents, 100 rappen = 1 CHF) at an assumed 0.82 CHF per USD (not verified; x-rates.com showed 0.8198 on 2026-11-08).
 Main runs use thinking level minimal (gemini-3.8-flash at ThinkingLevel.LOW) with vision on for scans.
 
 ## Accuracy per field type (measured, all firms)
@@ -77,45 +77,45 @@ Scan fields are counted only in the 'read from scan' row.
 
 ## Cost per firm and step (measured, live calls only)
 
-| firm | step | live calls | tokens in | tokens out | model seconds | euro cents |
+| firm | step | live calls | tokens in | tokens out | model seconds | rappen |
 |---|---|---|---|---|---|---|
 | hansen-elektrotechnik | classify | 6 | 2265 | 97 | 7.2 | 0.08 |
-| hansen-elektrotechnik | extract | 6 | 3328 | 1805 | 20.6 | 0.85 |
-| hansen-elektrotechnik | total | 12 | 5593 | 1902 | 27.8 | 0.94 |
-| weber-stahlbau | classify | 6 | 2297 | 97 | 4.4 | 0.09 |
-| weber-stahlbau | extract | 6 | 3360 | 1800 | 19.3 | 0.85 |
-| weber-stahlbau | total | 12 | 5657 | 1897 | 23.7 | 0.94 |
-| mueller-geruestbau | classify | 5 | 1933 | 78 | 3.1 | 0.07 |
-| mueller-geruestbau | extract | 5 | 2816 | 1400 | 16.0 | 0.68 |
-| mueller-geruestbau | total | 10 | 4749 | 1478 | 19.1 | 0.75 |
-| baltic-krane | classify | 6 | 2723 | 97 | 5.0 | 0.10 |
-| baltic-krane | extract | 7 | 4692 | 2287 | 22.9 | 1.02 |
-| baltic-krane | total | 13 | 7415 | 2384 | 27.9 | 1.12 |
-| nordhaus-bau | classify | 6 | 2272 | 97 | 4.7 | 0.09 |
-| nordhaus-bau | extract | 6 | 3335 | 1898 | 20.2 | 0.88 |
-| nordhaus-bau | total | 12 | 5607 | 1995 | 24.9 | 0.97 |
+| hansen-elektrotechnik | extract | 6 | 3328 | 1805 | 20.6 | 0.76 |
+| hansen-elektrotechnik | total | 12 | 5593 | 1902 | 27.8 | 0.84 |
+| weber-stahlbau | classify | 6 | 2297 | 97 | 19.9 | 0.08 |
+| weber-stahlbau | extract | 6 | 3360 | 1796 | 21.7 | 0.76 |
+| weber-stahlbau | total | 12 | 5657 | 1893 | 41.6 | 0.84 |
+| mueller-geruestbau | classify | 5 | 1933 | 78 | 3.1 | 0.06 |
+| mueller-geruestbau | extract | 5 | 2816 | 1400 | 16.0 | 0.60 |
+| mueller-geruestbau | total | 10 | 4749 | 1478 | 19.1 | 0.67 |
+| baltic-krane | classify | 6 | 2723 | 97 | 5.0 | 0.09 |
+| baltic-krane | extract | 7 | 4692 | 2287 | 22.9 | 0.91 |
+| baltic-krane | total | 13 | 7415 | 2384 | 27.9 | 0.99 |
+| nordhaus-bau | classify | 6 | 2272 | 97 | 4.7 | 0.08 |
+| nordhaus-bau | extract | 6 | 3335 | 1898 | 20.2 | 0.79 |
+| nordhaus-bau | total | 12 | 5607 | 1995 | 24.9 | 0.86 |
 
 ## Thinking level comparison (measured)
 Normal result files keep older verdicts; only their fields and call logs are used here.
 For baltic-krane the normal run sent the scan as the embedded PNG, the minimal run as PDF bytes at medium resolution, so its token counts differ in input as well as thinking.
 
-| firm | level | fields right | tokens in | tokens out | model seconds | euro cents |
+| firm | level | fields right | tokens in | tokens out | model seconds | rappen |
 |---|---|---|---|---|---|---|
-| hansen-elektrotechnik | minimal | 35/35 | 5593 | 1902 | 27.8 | 0.94 |
-| hansen-elektrotechnik | normal | 35/35 | 5593 | 14390 | 121.9 | 5.25 |
-| weber-stahlbau | minimal | 35/35 | 5657 | 1897 | 23.7 | 0.94 |
-| weber-stahlbau | normal | 35/35 | 5657 | 18944 | 160.3 | 6.82 |
-| mueller-geruestbau | minimal | 29/29 | 4749 | 1478 | 19.1 | 0.75 |
-| mueller-geruestbau | normal | 29/29 | 4749 | 13895 | 116.3 | 5.03 |
-| baltic-krane | minimal | 35/35 | 7415 | 2384 | 27.9 | 1.12 |
-| baltic-krane | normal | 35/35 | 7651 | 10792 | 94.3 | 4.10 |
-| nordhaus-bau | minimal | 36/36 | 5607 | 1995 | 24.9 | 0.97 |
-| nordhaus-bau | normal | 36/36 | 5607 | 14943 | 121.0 | 5.44 |
+| hansen-elektrotechnik | minimal | 35/35 | 5593 | 1902 | 27.8 | 0.84 |
+| hansen-elektrotechnik | normal | 35/35 | 5593 | 14390 | 121.9 | 4.68 |
+| weber-stahlbau | minimal | 35/35 | 5657 | 1893 | 41.6 | 0.84 |
+| weber-stahlbau | normal | 35/35 | 5657 | 18944 | 160.3 | 6.08 |
+| mueller-geruestbau | minimal | 29/29 | 4749 | 1478 | 19.1 | 0.67 |
+| mueller-geruestbau | normal | 29/29 | 4749 | 13895 | 116.3 | 4.49 |
+| baltic-krane | minimal | 35/35 | 7415 | 2384 | 27.9 | 0.99 |
+| baltic-krane | normal | 35/35 | 7651 | 10792 | 94.3 | 3.66 |
+| nordhaus-bau | minimal | 36/36 | 5607 | 1995 | 24.9 | 0.86 |
+| nordhaus-bau | normal | 36/36 | 5607 | 14943 | 121.0 | 4.85 |
 
 ## Scan handling, baltic-krane (measured)
 
 - Scan: two reads. Read A gemini-3.8-flash, read B gemini-3.5-flash-lite, both on the PDF bytes. 7 of 7 answer-key fields match; the two reads agree on 7 of 8 schema fields, which become high confidence.
-  - Read B added 884 tokens in, 506 tokens out, 0.14 euro cents.
+  - Read B added 884 tokens in, 506 tokens out, 0.13 rappen.
   - insurer: expected 'Ostsee Haftpflicht Versicherung VVaG', got 'Ostsee Haftpflicht Versicherung VVaG', confidence high
   - policy_number: expected 'OHV-BHV-7730412', got 'OHV-BHV-7730412', confidence high
   - insured_name: expected 'Baltic Krane GmbH', got 'Baltic Krane GmbH', confidence high

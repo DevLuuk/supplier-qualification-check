@@ -26,9 +26,9 @@ PRICE_USD_PER_MILLION: dict[str, tuple[float, float]] = {
     "gemini-3.5-flash-lite": (0.30, 2.50),
     "gemini-3.8-flash": (0.75, 3.75),
 }
-# assumed exchange rate, not verified
-EUR_PER_USD = 0.92
-CENTS_PER_EURO = 100
+# assumed exchange rate, not verified: x-rates.com showed 0.8198 CHF per USD on 2026-11-08
+CHF_PER_USD = 0.82
+RAPPEN_PER_FRANC = 100
 TOKENS_PER_MILLION = 1_000_000
 
 DEFAULT_THINKING: Thinking = "minimal"
@@ -93,10 +93,10 @@ def use_thinking(level: Thinking) -> None:
     thinking = level
 
 
-def cost_cents(call: CallLog) -> float:
+def cost_rappen(call: CallLog) -> float:
     price_in, price_out = PRICE_USD_PER_MILLION.get(call.model, (0.0, 0.0))
     usd = (call.tokens_in * price_in + call.tokens_out * price_out) / TOKENS_PER_MILLION
-    return usd * EUR_PER_USD * CENTS_PER_EURO
+    return usd * CHF_PER_USD * RAPPEN_PER_FRANC
 
 
 def _thinking_for(tier: Tier) -> Thinking:

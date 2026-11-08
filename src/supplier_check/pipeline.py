@@ -221,7 +221,7 @@ def _doc_summary(item: _Input, firm: FirmFile, calls: list[CallLog]) -> DocSumma
         seconds=round(sum(call.seconds for call in own), 2),
         tokens_in=sum(call.tokens_in for call in own),
         tokens_out=sum(call.tokens_out for call in own),
-        cents=round(sum(map(llm.cost_cents, own)), 4),
+        rappen=round(sum(map(llm.cost_rappen, own)), 4),
     )
 
 
@@ -234,7 +234,7 @@ def _summary(
         model_seconds=round(sum(call.seconds for call in calls), 2),
         tokens_in=sum(call.tokens_in for call in calls),
         tokens_out=sum(call.tokens_out for call in calls),
-        cents=round(sum(map(llm.cost_cents, calls)), 4),
+        rappen=round(sum(map(llm.cost_rappen, calls)), 4),
         documents=len(firm.documents),
         fields=sum(row.fields for row in per_document),
         low_confidence=sum(row.low_confidence for row in per_document),
@@ -288,7 +288,7 @@ def _usage(calls: list[CallLog]) -> dict[str, float | int]:
     return {
         "tokens_in": sum(call.tokens_in for call in calls),
         "tokens_out": sum(call.tokens_out for call in calls),
-        "cents": round(sum(map(llm.cost_cents, calls)), 4),
+        "rappen": round(sum(map(llm.cost_rappen, calls)), 4),
     }
 
 
@@ -336,7 +336,7 @@ def save(result: RunResult) -> Path:
 def cache_caption(summary: RunSummary) -> str:
     if not summary.cached_calls:
         return ""
-    return f"from cache; live run took {summary.wall_seconds:.1f} s and cost {summary.cents:.2f} cents"
+    return f"from cache; live run took {summary.wall_seconds:.1f} s and cost {summary.rappen:.2f} rappen"
 
 
 def usage_text(event: StepEvent) -> str:
@@ -352,14 +352,14 @@ def format_event(event: StepEvent) -> str:
     return f"[{event.step}] {event.status}{usage} {event.detail}".rstrip()
 
 
-def print_event(event: StepEvent) -> None:
-    print(format_event(event), flush=True)
+def newest_first(events: list[StepEvent]) -> str:
+    return "\n".join(format_event(event) for event in reversed(events))
 
 
 def summary_lines(summary: RunSummary) -> list[str]:
     return [
         f"wall {summary.wall_seconds:.1f} s | model {summary.model_seconds:.1f} s | "
-        f"tokens {summary.tokens_in} in, {summary.tokens_out} out | {summary.cents:.3f} euro cents",
+        f"tokens {summary.tokens_in} in, {summary.tokens_out} out | {summary.rappen:.2f} rappen",
         f"{summary.documents} documents, {summary.fields} fields, {summary.low_confidence} low confidence | "
         f"pass {summary.passed}, fail {summary.failed}, unsure {summary.unsure} | "
         f"{summary.cached_calls} cached calls | thinking {summary.thinking}",
@@ -375,7 +375,7 @@ def print_table(result: RunResult) -> None:
         for row in result.summary.per_document:
             print(f"  {row.file:<28} {row.doc_type:<22} {row.read_from:<10} p{row.pages} "
                   f"{row.fields}f {row.low_confidence}low {row.seconds:.1f}s "
-                  f"{row.tokens_in}+{row.tokens_out}t {row.cents:.3f}c")
+                  f"{row.tokens_in}+{row.tokens_out}t {row.rappen:.2f} rappen")
     print(f"\n{'rule':<{rule_width}} {'status':<{status_width}} reason")
     for verdict in result.verdicts:
         print(f"{verdict.rule_id:<{rule_width}} {verdict.status:<{status_width}} {verdict.reason[:REASON_WIDTH]}")
@@ -393,7 +393,9 @@ def main(argv: list[str] | None = None) -> None:
         parser.error(f"{args.folder} is not a folder")
     llm.use_thinking(args.thinking)
     llm.use_live(args.live)
-    result = merge_with_saved(check_firm(args.folder, print_event))
+    events: list[StepEvent] = []
+    result = merge_with_saved(check_firm(args.folder, events.append))
+    print("Run log, newest first:\n" + newest_first(events))
     print_table(result)
     print(f"Saved {save(result)}")
 

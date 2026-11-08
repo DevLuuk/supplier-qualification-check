@@ -14,7 +14,7 @@ from supplier_check.pipeline import (
     RESULTS_DIR,
     ROOT,
     check_firm,
-    format_event,
+    newest_first,
     save,
     usage_text,
 )
@@ -72,7 +72,7 @@ def _show_summary(result: RunResult) -> None:
     first[0].metric("Wall clock", f"{summary.wall_seconds:.1f} s")
     first[1].metric("Model time", f"{summary.model_seconds:.1f} s")
     first[2].metric("Tokens in / out", f"{summary.tokens_in} / {summary.tokens_out}")
-    first[3].metric("Cost", f"{summary.cents:.2f} euro cents")
+    first[3].metric("Cost (rappen, Swiss cents)", f"{summary.rappen:.2f}")
     first[4].metric("Thinking", summary.thinking)
     second = st.columns(5)
     second[0].metric("Documents read", summary.documents)
@@ -87,14 +87,14 @@ def _show_summary(result: RunResult) -> None:
 
 def _count_session(result: RunResult) -> None:
     runs = st.session_state.setdefault(SESSION_KEY, [])
-    runs.append((result.firm_file.slug, result.summary.cents if result.summary else 0.0))
+    runs.append((result.firm_file.slug, result.summary.rappen if result.summary else 0.0))
 
 
 def _show_session_total() -> None:
     runs = st.session_state.get(SESSION_KEY, [])
     firms = len({slug for slug, _ in runs})
-    cents = sum(cost for _, cost in runs)
-    st.caption(f"Session: {len(runs)} runs, {firms} firms checked, {cents:.2f} euro cents in total.")
+    rappen = sum(cost for _, cost in runs)
+    st.caption(f"Session: {len(runs)} runs, {firms} firms checked, {rappen:.2f} rappen in total.")
 
 
 def _row(verdict: Verdict) -> dict[str, str]:
@@ -173,22 +173,23 @@ class StageStrip:
 def _run(slug: str, live: bool) -> None:
     llm.use_live(live)
     strip = StageStrip()
-    log = st.status("Run log", expanded=True)
+    log = st.status("Run log, newest first", expanded=True)
+    log_lines = log.empty()
     events: list[StepEvent] = []
 
     def on_step(event: StepEvent) -> None:
         events.append(event)
         strip.update(event)
-        log.write(format_event(event))
+        log_lines.text(newest_first(events))
 
     try:
         result = check_firm(FIRMS_DIR / slug, on_step)
     except errors.APIError as error:
         logger.exception("Model call failed for %s", slug)
-        log.update(label="Run log: failed", state="error")
+        log.update(label="Run log, newest first: failed", state="error")
         st.error(f"The model call failed: {error.message}")
         return
-    log.update(label="Run log", state="complete", expanded=False)
+    log.update(label="Run log, newest first", state="complete", expanded=False)
     _count_session(result)
     result = merge_with_saved(result)
     save(result)
@@ -201,9 +202,8 @@ def _show_last_run() -> None:
     strip = StageStrip()
     for event in events:
         strip.update(event)
-    with st.expander("Run log"):
-        for event in events:
-            st.text(format_event(event))
+    with st.expander("Run log, newest first"):
+        st.text(newest_first(events))
 
 
 def main() -> None:

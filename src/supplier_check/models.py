@@ -142,7 +142,7 @@ class DocSummary(BaseModel):
     seconds: float
     tokens_in: int
     tokens_out: int
-    cents: float
+    rappen: float
 
 
 class RunSummary(BaseModel):
@@ -150,7 +150,7 @@ class RunSummary(BaseModel):
     model_seconds: float
     tokens_in: int
     tokens_out: int
-    cents: float
+    rappen: float
     documents: int
     fields: int
     low_confidence: int

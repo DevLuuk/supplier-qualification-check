@@ -206,7 +206,7 @@ def _usage_cells(calls: list[CallLog]) -> list[str]:
         str(sum(c.tokens_in for c in real)),
         str(sum(c.tokens_out for c in real)),
         f"{sum(c.seconds for c in real):.1f}",
-        f"{sum(map(llm.cost_cents, real)):.2f}",
+        f"{sum(map(llm.cost_rappen, real)):.2f}",
     ]
 
 
@@ -244,7 +244,7 @@ def _two_reads_lines(result: RunResult) -> list[str]:
         f"{sum(o.normalised for o in scan)} of {len(scan)} answer-key fields match; the two reads agree on "
         f"{len(agreed)} of {len(doc.fields)} schema fields, which become high confidence.",
         f"  - Read B added {_usage_cells(second)[1]} tokens in, {_usage_cells(second)[2]} tokens out, "
-        f"{_usage_cells(second)[4]} euro cents.",
+        f"{_usage_cells(second)[4]} rappen.",
     ]
     lines += [f"  - {o.field}: expected '{o.expected}', got '{o.got}', confidence {o.confidence}" for o in scan]
     lines += [f"  - {name}: {f.note}" for name, f in doc.fields.items() if f.note]
@@ -273,7 +273,8 @@ def _header() -> list[str]:
         f"All numbers are measured on {date.today().isoformat()} from the saved runs in `eval/results/`, "
         "compared with `data/firms/<slug>/answer_key.json`. All firms and documents are mock.",
         f"Prices from {llm.PRICE_SOURCE}, checked {llm.PRICE_CHECKED}: {prices}.",
-        f"Euro cents use an assumed exchange rate of {llm.EUR_PER_USD} EUR per USD (not verified).",
+        f"Cost is in rappen (Swiss cents, 100 rappen = 1 CHF) at an assumed {llm.CHF_PER_USD} CHF per USD "
+        "(not verified; x-rates.com showed 0.8198 on 2026-11-08).",
         "Main runs use thinking level minimal (gemini-3.8-flash at ThinkingLevel.LOW) with vision on for scans.",
         "",
     ]
@@ -304,7 +305,7 @@ def build_report() -> str:
         "",
         "## Cost per firm and step (measured, live calls only)",
         "",
-        table(["firm", "step", "live calls", "tokens in", "tokens out", "model seconds", "euro cents"],
+        table(["firm", "step", "live calls", "tokens in", "tokens out", "model seconds", "rappen"],
               cost_rows(results)),
         "",
         "## Thinking level comparison (measured)",
@@ -312,7 +313,7 @@ def build_report() -> str:
         "For baltic-krane the normal run sent the scan as the embedded PNG, the minimal run as PDF bytes "
         "at medium resolution, so its token counts differ in input as well as thinking.",
         "",
-        table(["firm", "level", "fields right", "tokens in", "tokens out", "model seconds", "euro cents"],
+        table(["firm", "level", "fields right", "tokens in", "tokens out", "model seconds", "rappen"],
               thinking_rows()),
         "",
         "## Scan handling, baltic-krane (measured)",

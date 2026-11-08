@@ -54,3 +54,10 @@ def test_use_live_switches_flag(monkeypatch):
     assert llm.live is True
     llm.use_live(False)
     assert llm.live is False
+
+
+def test_cost_is_in_rappen_at_the_chf_rate():
+    call = CallLog(step="x", model="gemini-3.8-flash", tokens_in=1_000_000, tokens_out=0, seconds=0.0)
+    assert llm.cost_rappen(call) == pytest.approx(0.75 * llm.CHF_PER_USD * 100)
+    cached = call.model_copy(update={"model": "gemini-3.8-flash (cached)", "tokens_in": 0})
+    assert llm.cost_rappen(cached) == 0
