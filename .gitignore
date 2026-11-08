@@ -4,7 +4,7 @@ __pycache__/
 .env
 .claude/
 .DS_Store
-eval/results/*.json
+eval/results/
 eval/cache/
 .playwright-mcp/
 
