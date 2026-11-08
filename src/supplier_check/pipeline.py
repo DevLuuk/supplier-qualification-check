@@ -14,9 +14,11 @@ from pydantic import BaseModel, TypeAdapter
 from supplier_check import llm
 from supplier_check.classify import classify
 from supplier_check.email_draft import NOTHING_TO_ASK, draft_email, officer_note
+from supplier_check import extract as extraction
 from supplier_check.extract import extract, extract_scan
 from supplier_check.models import (
     CallLog,
+    DocCard,
     DocSummary,
     ExtractedDocument,
     FirmFile,
@@ -70,6 +72,7 @@ class _Stage:
         self.step = step
         self.on_step = on_step
         self.detail = ""
+        self.final_facts: dict[str, object] = {}
 
     def __enter__(self) -> "_Stage":
         self.first_call = len(llm.calls)
@@ -77,8 +80,22 @@ class _Stage:
         self.on_step(StepEvent(step=self.step, status="running"))
         return self
 
-    def progress(self, detail: str) -> None:
-        self.on_step(StepEvent(step=self.step, status="running", detail=detail))
+    def progress(self, detail: str, **facts: object) -> None:
+        self.on_step(StepEvent(step=self.step, status="running", detail=detail, **facts))
+
+    def file_progress(self, item_name: str, done: int, total: int, detail: str, **facts: object) -> None:
+        own = [c for c in llm.calls[self.first_call :] if c.file == item_name]
+        self.progress(
+            detail,
+            done=done,
+            total=total,
+            file=item_name,
+            tokens_in=sum(c.tokens_in for c in own),
+            tokens_out=sum(c.tokens_out for c in own),
+            rappen=round(sum(map(llm.cost_rappen, own)), 4),
+            cached=bool(own) and all(map(is_cached, own)),
+            **facts,
+        )
 
     def __exit__(self, exc_type: type | None, exc: BaseException | None, _tb: object) -> bool:
         stage_calls = llm.calls[self.first_call :]
@@ -89,8 +106,10 @@ class _Stage:
                 seconds=round(time.perf_counter() - self.started, 2),
                 tokens_in=sum(call.tokens_in for call in stage_calls),
                 tokens_out=sum(call.tokens_out for call in stage_calls),
+                rappen=round(sum(map(llm.cost_rappen, stage_calls)), 4),
                 cached=bool(stage_calls) and all(map(is_cached, stage_calls)),
                 detail=str(exc) if exc else self.detail,
+                **self.final_facts,
             )
         )
         return False
@@ -122,9 +141,10 @@ def _with_media(item: _Input, call: Callable[[list[bytes]], R]) -> R:
         return call(read_page_images(item.path))
 
 
-def _parallel(
-    work: Callable[[_Input], R], inputs: list[_Input], stage: _Stage, describe: Callable[[_Input, R], str]
-) -> dict[Path, R]:
+Describe = Callable[[_Input, R], tuple[str, dict[str, object]]]
+
+
+def _parallel(work: Callable[[_Input], R], inputs: list[_Input], stage: _Stage, describe: Describe) -> dict[Path, R]:
     def tagged_work(item: _Input) -> R:
         with llm.tagged(item.path.name):
             return work(item)
@@ -135,14 +155,33 @@ def _parallel(
         for future in as_completed(futures):
             item = futures[future]
             results[item.path] = future.result()
-            stage.progress(describe(item, results[item.path]))
+            detail, facts = describe(item, results[item.path])
+            stage.file_progress(item.path.name, len(results), len(inputs), detail, **facts)
     return results
 
 
-def _describe_document(item: _Input, doc: ExtractedDocument) -> str:
+def _first_quote(doc: ExtractedDocument) -> str:
+    return next((f.source.quote for f in doc.fields.values() if f.source and f.source.quote), "")
+
+
+def _describe_document(item: _Input, doc: ExtractedDocument) -> tuple[str, dict[str, object]]:
     low = sum(field.confidence == "low" for field in doc.fields.values())
     source = " from page image" if item.read_from == "page_image" else ""
-    return f"{item.path.name}: {len(doc.fields)} fields{source}, {low} low confidence"
+    card = DocCard(
+        file=item.path.name,
+        doc_type=doc.doc_type,
+        read_from=item.read_from,
+        fields=sum(f.value is not None for f in doc.fields.values()),
+        low_confidence=low,
+        first_quote=_first_quote(doc),
+    )
+    two_reads = item.read_from == "page_image" and extraction.SCAN_READS_MUST_AGREE
+    detail = f"{item.path.name}: {len(doc.fields)} fields{source}, {low} low confidence"
+    return detail, {"card": card, "two_reads": two_reads}
+
+
+def _describe_type(item: _Input, doc_type: str) -> tuple[str, dict[str, object]]:
+    return f"{item.path.name}: {doc_type}", {}
 
 
 def _read_and_classify(folder: Path, on_step: OnStep) -> tuple[list[_Input], dict[Path, str]]:
@@ -157,7 +196,7 @@ def _read_and_classify(folder: Path, on_step: OnStep) -> tuple[list[_Input], dic
             lambda item: _with_media(item, lambda media: classify(item.pages, media)).doc_type,
             readable,
             stage,
-            lambda item, doc_type: f"{item.path.name}: {doc_type}",
+            _describe_type,
         )
         recognised = sum(doc_type != OTHER for doc_type in types.values())
         stage.detail = f"{recognised} of {len(inputs)} documents recognised"
@@ -170,6 +209,8 @@ def build_firm_file(
     inputs, types = _read_and_classify(folder, on_step)
     known = [i for i in inputs if types.get(i.path, OTHER) != OTHER]
     with _Stage("extract", on_step) as stage:
+        for scan in (i for i in known if i.read_from == "page_image" and extraction.SCAN_READS_MUST_AGREE):
+            stage.progress(f"{scan.path.name}: scan, read twice", total=len(known), two_reads=True)
         extracted = _parallel(
             lambda item: _with_media(
                 item,
@@ -247,16 +288,25 @@ def _summary(
     )
 
 
+def _timed(on_step: OnStep, started: float) -> OnStep:
+    def emit(event: StepEvent) -> None:
+        on_step(event.model_copy(update={"at": round(time.perf_counter() - started, 2)}))
+
+    return emit
+
+
 def check_firm(folder: Path, on_step: OnStep = _ignore) -> RunResult:
     started, first_call = time.perf_counter(), len(llm.calls)
+    on_step = _timed(on_step, started)
     firm, unclassified, inputs = build_firm_file(folder, on_step)
     with _Stage("lookups", on_step) as stage:
         lookups = run_lookups(firm, firm.country)
         stage.detail = " ".join(lookup.note for lookup in lookups)
     with _Stage("rules", on_step) as stage:
         verdicts = run_rules(firm, firm.country)
-        counts = ", ".join(f"{sum(v.status == s for v in verdicts)} {s}" for s in STATUSES)
-        stage.detail = f"{len(verdicts)} rules: {counts}"
+        tally = {s: sum(v.status == s for v in verdicts) for s in STATUSES}
+        stage.detail = f"{len(verdicts)} rules: " + ", ".join(f"{n} {s}" for s, n in tally.items())
+        stage.final_facts = {"verdict_counts": tally}
     with _Stage("verdicts", on_step) as stage:
         rules = rule_book(firm.country)
         email = draft_email(_firm_name(firm), verdicts, rules)

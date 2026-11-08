@@ -11,13 +11,15 @@ from supplier_check import llm
 from supplier_check.pipeline import (
     cache_caption,
     merge_with_saved,
+    DEFAULT_COUNTRY,
     RESULTS_DIR,
     ROOT,
     check_firm,
     newest_first,
     save,
-    usage_text,
 )
+from supplier_check.rules import rule_book
+from supplier_check.strip import StripView, verdict_line_html
 
 FIRMS_DIR = ROOT / "data" / "firms"
 STATUS_COLOURS = {"pass": "#c8e6c9", "fail": "#ffcdd2", "unsure": "#fff59d"}
@@ -28,24 +30,6 @@ AGREED_LABEL = "read from scan, two reads agree"
 SOURCE_LABELS = {"page_image": SCAN_LABEL, "page_image_two_reads": AGREED_LABEL}
 SESSION_KEY = "session_runs"
 EVENTS_KEY = "events"
-GEMINI = ":blue[Gemini]"
-CODE = ":gray[code]"
-STEPS: list[tuple[StepName, str]] = [
-    ("read_text", CODE),
-    ("classify", GEMINI),
-    ("extract", GEMINI),
-    ("lookups", CODE),
-    ("rules", CODE),
-    ("verdicts", CODE),
-]
-STEP_KINDS = dict(STEPS)
-STATE_BADGES = {
-    "waiting": ":gray-background[waiting]",
-    "running": ":orange-background[running...]",
-    "done": ":green-background[done]",
-    "failed": ":red-background[failed]",
-}
-
 logger = logging.getLogger(__name__)
 
 
@@ -112,10 +96,10 @@ def _status_style(status: str) -> str:
 
 
 def _show_verdicts(result: RunResult) -> None:
+    counts = {s: sum(v.status == s for v in result.verdicts) for s in STATUS_COLOURS}
+    st.markdown(verdict_line_html(counts), unsafe_allow_html=True)
     table = pd.DataFrame([_row(verdict) for verdict in result.verdicts])
     st.dataframe(table.style.map(_status_style, subset=["status"]), hide_index=True)
-    counts = {s: sum(v.status == s for v in result.verdicts) for s in STATUS_COLOURS}
-    st.caption(f"pass {counts['pass']}, fail {counts['fail']}, unsure {counts['unsure']}")
 
 
 def _show_details(result: RunResult) -> None:
@@ -155,24 +139,21 @@ def _show_decision(slug: str) -> None:
         st.error(f"Rejected. Saved to {_decide(slug, 'rejected').name}")
 
 
-class StageStrip:
-    def __init__(self) -> None:
-        columns = st.columns(len(STEPS))
-        self.boxes = {step: column.empty() for (step, _), column in zip(STEPS, columns)}
-        for step, _ in STEPS:
-            self.update(StepEvent(step=step, status="running"), waiting=True)
-
-    def update(self, event: StepEvent, waiting: bool = False) -> None:
-        state = "waiting" if waiting else event.status
-        with self.boxes[event.step].container(border=True):
-            st.markdown(f"**{event.step}**  \n{STEP_KINDS[event.step]}")
-            st.markdown(STATE_BADGES[state])
-            st.caption(usage_text(event) if state in ("done", "failed") else " ")
+def _sentences() -> dict[StepName, str]:
+    rule_count = len(rule_book(DEFAULT_COUNTRY))
+    return {
+        "read_text": "Turn each PDF into text",
+        "classify": "Ask Gemini which paper this is",
+        "extract": "Pull the fields with a proof quote",
+        "lookups": "Check the mock register and sanctions list",
+        "rules": f"Run the {rule_count} German rules",
+        "verdicts": "Write the verdicts and the email",
+    }
 
 
 def _run(slug: str, live: bool) -> None:
     llm.use_live(live)
-    strip = StageStrip()
+    strip = StripView(_sentences())
     log = st.status("Run log, newest first", expanded=True)
     log_lines = log.empty()
     events: list[StepEvent] = []
@@ -199,7 +180,7 @@ def _run(slug: str, live: bool) -> None:
 
 def _show_last_run() -> None:
     events: list[StepEvent] = st.session_state.get(EVENTS_KEY, [])
-    strip = StageStrip()
+    strip = StripView(_sentences())
     for event in events:
         strip.update(event)
     with st.expander("Run log, newest first"):

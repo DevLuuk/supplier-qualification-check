@@ -85,12 +85,12 @@ Scan fields are counted only in the 'read from scan' row.
 | weber-stahlbau | classify | 6 | 2297 | 97 | 19.9 | 0.08 |
 | weber-stahlbau | extract | 6 | 3360 | 1796 | 21.7 | 0.76 |
 | weber-stahlbau | total | 12 | 5657 | 1893 | 41.6 | 0.84 |
-| mueller-geruestbau | classify | 5 | 1933 | 78 | 3.1 | 0.06 |
-| mueller-geruestbau | extract | 5 | 2816 | 1400 | 16.0 | 0.60 |
-| mueller-geruestbau | total | 10 | 4749 | 1478 | 19.1 | 0.67 |
-| baltic-krane | classify | 6 | 2723 | 97 | 5.0 | 0.09 |
-| baltic-krane | extract | 7 | 4692 | 2287 | 22.9 | 0.91 |
-| baltic-krane | total | 13 | 7415 | 2384 | 27.9 | 0.99 |
+| mueller-geruestbau | classify | 5 | 1933 | 78 | 4.0 | 0.06 |
+| mueller-geruestbau | extract | 5 | 2816 | 1371 | 15.1 | 0.59 |
+| mueller-geruestbau | total | 10 | 4749 | 1449 | 19.0 | 0.66 |
+| baltic-krane | classify | 6 | 2723 | 97 | 5.4 | 0.09 |
+| baltic-krane | extract | 7 | 4692 | 2398 | 23.2 | 0.94 |
+| baltic-krane | total | 13 | 7415 | 2495 | 28.6 | 1.03 |
 | nordhaus-bau | classify | 6 | 2272 | 97 | 4.7 | 0.08 |
 | nordhaus-bau | extract | 6 | 3335 | 1898 | 20.2 | 0.79 |
 | nordhaus-bau | total | 12 | 5607 | 1995 | 24.9 | 0.86 |
@@ -105,9 +105,9 @@ For baltic-krane the normal run sent the scan as the embedded PNG, the minimal r
 | hansen-elektrotechnik | normal | 35/35 | 5593 | 14390 | 121.9 | 4.68 |
 | weber-stahlbau | minimal | 35/35 | 5657 | 1893 | 41.6 | 0.84 |
 | weber-stahlbau | normal | 35/35 | 5657 | 18944 | 160.3 | 6.08 |
-| mueller-geruestbau | minimal | 29/29 | 4749 | 1478 | 19.1 | 0.67 |
+| mueller-geruestbau | minimal | 29/29 | 4749 | 1449 | 19.0 | 0.66 |
 | mueller-geruestbau | normal | 29/29 | 4749 | 13895 | 116.3 | 4.49 |
-| baltic-krane | minimal | 35/35 | 7415 | 2384 | 27.9 | 0.99 |
+| baltic-krane | minimal | 35/35 | 7415 | 2495 | 28.6 | 1.03 |
 | baltic-krane | normal | 35/35 | 7651 | 10792 | 94.3 | 3.66 |
 | nordhaus-bau | minimal | 36/36 | 5607 | 1995 | 24.9 | 0.86 |
 | nordhaus-bau | normal | 36/36 | 5607 | 14943 | 121.0 | 4.85 |
@@ -115,7 +115,7 @@ For baltic-krane the normal run sent the scan as the embedded PNG, the minimal r
 ## Scan handling, baltic-krane (measured)
 
 - Scan: two reads. Read A gemini-3.8-flash, read B gemini-3.5-flash-lite, both on the PDF bytes. 7 of 7 answer-key fields match; the two reads agree on 7 of 8 schema fields, which become high confidence.
-  - Read B added 884 tokens in, 506 tokens out, 0.13 rappen.
+  - Read B added 884 tokens in, 492 tokens out, 0.12 rappen.
   - insurer: expected 'Ostsee Haftpflicht Versicherung VVaG', got 'Ostsee Haftpflicht Versicherung VVaG', confidence high
   - policy_number: expected 'OHV-BHV-7730412', got 'OHV-BHV-7730412', confidence high
   - insured_name: expected 'Baltic Krane GmbH', got 'Baltic Krane GmbH', confidence high
@@ -123,5 +123,5 @@ For baltic-krane the normal run sent the scan as the embedded PNG, the minimal r
   - insured_amount_eur: expected '5000000', got '5000000', confidence high
   - valid_from: expected '2026-04-01', got '2026-04-01', confidence high
   - valid_until: expected '2027-03-31', got '2027-03-31', confidence high
-  - insured_address: two reads differ: A=None B=Am Strande 2 | 18055 Rostock
+  - insured_address: missing in both reads
 - Vision off: unreadable files: insurance_certificate.pdf (no text layer (scan)). Non-pass rules: DE-DOC-02 unsure, DE-INS-01 unsure, DE-INS-02 unsure, DE-INS-03 unsure, DE-INS-04 unsure, DE-INS-05 unsure.

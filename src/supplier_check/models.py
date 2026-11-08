@@ -101,14 +101,31 @@ class CallLog(BaseModel):
 StepName = Literal["read_text", "classify", "extract", "lookups", "rules", "verdicts"]
 
 
+class DocCard(BaseModel):
+    file: str
+    doc_type: str
+    read_from: str
+    fields: int
+    low_confidence: int
+    first_quote: str
+
+
 class StepEvent(BaseModel):
     step: StepName
     status: Literal["running", "done", "failed"]
     seconds: float = 0.0
     tokens_in: int = 0
     tokens_out: int = 0
+    rappen: float = 0.0
     cached: bool = False
     detail: str = ""
+    at: float = 0.0
+    done: int = 0
+    total: int = 0
+    file: str = ""
+    two_reads: bool = False
+    card: DocCard | None = None
+    verdict_counts: dict[str, int] = {}
 
 
 class Finding(BaseModel):

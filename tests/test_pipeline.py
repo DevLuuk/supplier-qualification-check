@@ -97,3 +97,16 @@ def test_run_log_shows_newest_line_first():
     lines = pipeline.newest_first(events).splitlines()
     assert lines[0] == "[classify] running"
     assert lines[-1] == "[read_text] running"
+
+
+def test_merge_never_takes_verdicts_or_notes_from_the_saved_file(results_dir):
+    from supplier_check.models import Verdict
+
+    def with_reason(result: RunResult, reason: str) -> RunResult:
+        verdict = Verdict(rule_id="DE-INS-05", requirement="", status="unsure", reason=reason, evidence=[])
+        return result.model_copy(update={"verdicts": [verdict]})
+
+    pipeline.save(with_reason(_result([REAL]), "two reads differ: A=None B=old"))
+    merged = pipeline.merge_with_saved(with_reason(_result([CACHED]), "two reads differ: A=None B=new"))
+    assert merged.verdicts[0].reason == "two reads differ: A=None B=new"
+    assert merged.calls == [REAL]
