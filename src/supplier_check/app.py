@@ -194,7 +194,7 @@ def main() -> None:
     st.caption("All firms, documents, register and sanctions data are mock.")
     slug = st.selectbox("Firm", _firm_slugs())
     run_column, live_column = st.columns([1, 4])
-    live = live_column.checkbox("Live run (ignore cache)")
+    live = live_column.checkbox("Live run (ignore cache)", value=True)
     if run_column.button("Run"):
         _run(slug, live)
     elif _result_for(slug):
