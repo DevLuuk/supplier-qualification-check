@@ -2,11 +2,18 @@
 
 Nov 10, 2026 · Luuk Peterse
 
-This document covers the use case, the design, how I know it works, the path to production, and the kill test. The executive summary stands on its own.
+This document covers the use case, the design, how I know it works, the path to production, and the kill test. The executive summary stands on its own. The code is at https://github.com/DevLuuk/supplier-check; the README gets you from clone to demo.
 
 ## 1. The user and the flow
 
-The user is a procurement officer for one region. Before a subcontractor may work on a site, she checks its papers: register extract, insurance, ISO 9001 and ISO 45001 (quality and safety certificates), safety record, bank letter. Today she opens 8 to 12 PDFs, copies dates and numbers into a spreadsheet checklist, looks the firm up in the register and the sanctions list (firms NIG may not work with), and emails the firm for what is missing. Two to four hours per firm, spread over weeks of waiting (assumed).
+The user is a compliance officer for one region. Before a subcontractor may work on a site, she checks its papers:
+
+1. register extract
+2. insurance
+3. ISO 9001 and ISO 45001 (quality and safety certificates)
+4. safety record and bank letter
+
+Today she opens 8 to 12 PDFs, copies dates and numbers into a spreadsheet checklist, looks the firm up in the register and the sanctions list (firms NIG may not work with), and emails the firm for what is missing. Two to four hours per firm, spread over weeks of waiting (assumed).
 
 I am new to construction procurement. The document list, the amounts and the hours are my guesses, written down so someone who knows better can correct them.
 
@@ -33,17 +40,37 @@ Seven steps in a fixed order. Two are model calls, the rest is plain code.
 | The eval | Built: answer key per firm plus a script | Vendor tools do not know our fields |
 | The glue | Built: plain Python, no agent framework | Seven fixed steps do not need one. A framework earns its place when the next step depends on what the model found |
 
-About 2,100 lines of Python, 127 tests. All model calls go through one function: schema in, checked object out, answer cached, cost logged. Swapping the vendor is that one file (not tested). Temperature 0, low thinking: on all 170 fields it scored the same as normal thinking at five to seven times less cost (measured).
+Size: About 2,100 lines of Python, 127 tests.
+
+All model calls go through one function: schema in, checked object out, answer cached, cost logged. Swapping the vendor is that one file (not tested). Temperature 0, low thinking: on all 170 fields it scored the same as normal thinking at five to seven times less cost (measured).
 
 ## 3. How a value earns trust
 
-The model never decides pass or fail. It copies values, and for each value it returns the sentence and page it came from. Code then checks: is that sentence really in the document, and is the value really in that sentence? Only then is the value high confidence. Anything less can make a rule unsure, never pass.
+The model never decides pass or fail. It only copies values out of the document. Every value then gets a confidence, high or low, and code decides it:
+
+1. The model returns the value, the sentence it found it in, and the page.
+2. Code searches the page text for that sentence. Not found: low.
+3. Code searches that sentence for the value. Dates and amounts are normalised first, so "EUR 5 Mio." counts as 5,000,000. Not found: low.
+4. The model also rates itself. If it says low: low.
+5. Otherwise: high.
+
+Only a high confidence value can make a rule pass. A low one can make a rule unsure, never pass. A missing value makes its rule unsure.
 
 ![three checks, one way to pass](images/design-value-trust.png)
 
-Scans have no text to check against, so they are read twice by two different models. A value counts only when both agree.
+Scans have no text layer to search, so steps 2 and 3 cannot run. A scan is read twice by two different models instead, and a value is high only when both readings agree.
 
-The rules are code. Germany has 20: documents present, register number and name, insurance valid and high enough and running 30 more days, ISO certificates valid, zero fatalities in three years, no sanctions match, bank account holder matches. Unsure is a real answer: a missing value, a name that almost matches, a date it could not read. Register and sanctions findings never reach the firm's email; telling a firm it is on a sanctions list can be illegal.
+The rules are code. Germany has 20 rules in seven groups:
+
+- documents present
+- register number and name
+- insurance valid and high enough and running 30 more days
+- ISO certificates valid
+- zero fatalities in three years
+- no sanctions match
+- bank account holder matches
+
+Unsure is a real answer: a missing value, a name that almost matches, a date it could not read. Register and sanctions findings never reach the firm's email; telling a firm it is on a sanctions list can be illegal.
 
 ## 4. How I know it works
 
@@ -82,14 +109,14 @@ Two quarters and two weeks, two engineers, two gates. Three things must be true 
 
 ![two quarters: eight work packages, two gates](images/production-timeline.png)
 
-What production adds that the prototype lacks: a mailbox or portal in, a decision record per firm written back to the region's procurement system, sign-on with three roles (officer, compliance, rule owner), a database with every verdict and override, one trace per run, keys in a vault, and a vendor account with a data agreement in the project's region.
+What production adds that the prototype lacks: a mailbox or portal in, a decision record per firm written back to the region's procurement system, sign-on with three roles (officer, legal, rule owner), a database with every verdict and override, one trace per run, keys in a vault, and a vendor account with a data agreement in the project's region.
 
-- Data. Documents hold personal data and stay in NIG's storage in the project's region. The asset that outlives every model is the test set: 50 real anonymised documents per region, and every override is one more labelled sample.
-- Security. The model only copies values and has no tools, so text inside a document that tries to steer it can at most produce a wrong value, which cannot pass a rule.
-- Reliability. The tool is not on the critical path: when it is down, the officer checks by hand. So office-hours support, no on-call. A run that cannot finish shows "not checked", never a half list.
-- Cost. The model is a few hundred francs a year at any volume, even after the price doubles on 1 January 2027. The cost is people: half an engineer (100,000 CHF), rule owners at two days a month per region (about 310,000 CHF at 20 regions), hosting 4,000 to 7,000 CHF, data licences not yet quoted. All assumed.
-- Countries. A new country is a rule file, a rule owner and a test set. Germany first, the UK second, the UAE last after a one-week spike on real Arabic documents.
-- Ownership. Procurement owns the rules. Engineering owns the reading. Only the officer owns the decision.
+- **Data**. Documents hold personal data and stay in NIG's storage in the project's region. The asset that outlives every model is the test set: 50 real anonymised documents per region, and every override is one more labelled sample.
+- **Security**. The model only copies values and has no tools, so text inside a document that tries to steer it can at most produce a wrong value, which cannot pass a rule.
+- **Reliability**. The tool is not on the critical path: when it is down, the officer checks by hand. So office-hours support, no on-call. A run that cannot finish shows "not checked", never a half list.
+- **Cost**. The model is a few hundred francs a year at any volume, even after the price doubles on 1 January 2027. The cost is people: half an engineer (100,000 CHF), rule owners at two days a month per region (about 310,000 CHF at 20 regions), hosting 4,000 to 7,000 CHF, data licences not yet quoted. All assumed.
+- **Countries**. A new country is a rule file, a rule owner and a test set. Germany first, the UK second, the UAE last after a one-week spike on real Arabic documents.
+- **Ownership**. Procurement owns the rules. Engineering owns the reading. Only the officer owns the decision.
 
 ![who decides, who owns the rules, who runs the service](images/production-operating-model.png)
 
@@ -113,4 +140,4 @@ Three stop lines, measured in a pilot with 100 real files over eight weeks. If o
 
 ![eight weeks, three metrics, one gate](images/kill-test-windows.png)
 
-Why these lines: 5% is five files, a pattern; 2% is two files, bad luck. 25% of lines wrong is a design problem, not tuning. At 30% saved the saving roughly equals the running cost, so it is the floor, not the target. Warning sign, not a stop line: more than 40% of lines still unsure after week 4 (measured on mock: 9 of 100).
+Why these lines: 5% is five files, a pattern; 2% is two files, bad luck. 25% of lines wrong is a design problem, not tuning. At 30% saved the saving roughly equals the running cost, so it is the floor, not the target. Warning sign, not a stop line: more than 40% of lines still unsure after week 4 (measured on the five mock firms: 9 of their 100 verdict lines).
