@@ -60,4 +60,4 @@ Three things first: a rule owner in procurement, legal's yes (six to ten weeks, 
 
 Two quarters and two weeks, two engineers, three things.
 
-The code, the design document and the eval report are at https://github.com/DevLuuk/supplier-check. The demo video (8 minutes) is at https://drive.proton.me/urls/01QJCNNHT8#kLMQ8TTlkSlK.
+The code, the design document and the eval report are at https://github.com/DevLuuk/supplier-qualification-check. The demo video (8 minutes) is at https://drive.proton.me/urls/01QJCNNHT8#kLMQ8TTlkSlK.

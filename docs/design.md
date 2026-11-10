@@ -2,7 +2,7 @@
 
 Nov 10, 2026 · Luuk Peterse
 
-This document covers the use case, the design, how I know it works, the path to production, and the kill test. The executive summary stands on its own. The code is at https://github.com/DevLuuk/supplier-check; the README gets you from clone to demo.
+This document covers the use case, the design, how I know it works, the path to production, and the kill test. The executive summary stands on its own. The code is at https://github.com/DevLuuk/supplier-qualification-check; the README gets you from clone to demo.
 
 ## 1. The user and the flow
 
@@ -42,7 +42,7 @@ Seven steps in a fixed order. Two are model calls, the rest is plain code.
 
 Size: About 2,100 lines of Python, 127 tests.
 
-All model calls go through one function: schema in, checked object out, answer cached, cost logged. Swapping the vendor is that one file (not tested). Temperature 0, low thinking: on all 170 fields it scored the same as normal thinking at five to seven times less cost (measured).
+All model calls go through one function: schema in, checked object out, answer cached, cost logged. Swapping the vendor is that one file (not tested). Temperature 0, low thinking: on all 170 fields it scored the same as normal thinking at four to seven times less cost (measured).
 
 ## 3. How a value earns trust
 
