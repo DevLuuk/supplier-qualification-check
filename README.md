@@ -6,6 +6,8 @@ The officer sees each rule with its proof, gets a draft email for anything missi
 
 All firms, documents, register and sanctions data are mock, and the lookups say MOCK on screen.
 
+Demo video, 8 minutes: https://drive.proton.me/urls/01QJCNNHT8#kLMQ8TTlkSlK
+
 ## From clone to demo
 
 ```bash
