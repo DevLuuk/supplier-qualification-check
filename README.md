@@ -23,6 +23,11 @@ Model answers are cached in `eval/cache/`, so a second run of the same firm make
 Add `--thinking normal` to the command line run to let the reading model think longer; the default is minimal.
 Run `uv run pytest -q` for the rule tests, which need no key.
 
+```bash
+uv run python eval/run_eval.py            # rebuilds docs/eval_report.md from the saved runs and the answer keys
+uv run python scripts/make_mock_data.py   # regenerates the mock firms, deterministic
+```
+
 ## Documents
 
 - `docs/executive-summary.md`: the ask, the value, the risks and the rollout on one page. Stands alone.
